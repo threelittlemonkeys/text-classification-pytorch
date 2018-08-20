@@ -31,6 +31,13 @@ def run_model(model, idx_to_tag, data):
         m = argmax(result[i])
         y = idx_to_tag[m]
         data[i].append(y)
+        if VERBOSE:
+            print(data[i][0])
+            y = enumerate(result[i].exp().tolist())
+            y = sorted(y, key = lambda x: x[1], reverse = True)
+            y = [(idx_to_tag[a], round(b, 6)) for a, b in y]
+            for a, b in y:
+                print(a, b)
     return data[:z]
 
 def predict():
