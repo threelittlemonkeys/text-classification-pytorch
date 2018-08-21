@@ -62,47 +62,21 @@ class rnn(nn.Module):
         h = self.softmax(h)
         return h
 
-class attn(nn.Module): # attention layer (Luong et al 2015)
+class attn(nn.Module): # attention layer
     def __init__(self):
         super().__init__()
-        self.type = "global" # global, local-m, local-p
-        self.method = "dot" # dot, general, concat
-        self.hidden = None # attentional hidden state for input feeding
 
         # architecture
-        if self.type[:5] == "local":
-            self.window_size = 5
-            if self.type[-1] == "p":
-                self.Wp = nn.Linear(HIDDEN_SIZE, HIDDEN_SIZE)
-                self.Vp = nn.Linear(HIDDEN_SIZE, 1)
-        if self.method == "general":
-            self.Wa = nn.Linear(HIDDEN_SIZE, HIDDEN_SIZE)
-        elif self.method  == "concat":
-            pass # TODO
+        self.Wa = nn.Linear(HIDDEN_SIZE, HIDDEN_SIZE)
         self.Wc = nn.Linear(HIDDEN_SIZE * 2, HIDDEN_SIZE)
 
-    def align(self, ht, hs, mask, k):
-        if self.method == "dot":
-            a = ht.bmm(hs.transpose(1, 2))
-        elif self.method == "general":
-            a = ht.bmm(self.Wa(hs).transpose(1, 2))
-        elif self.method == "concat":
-            pass # TODO
+    def align(self, ht, hs, mask):
+        a = ht.bmm(self.Wa(hs).transpose(1, 2))
         a = a.masked_fill(mask.unsqueeze(1), -10000) # masking in log space
         a = F.softmax(a, 2)
-        if self.type == "local-p":
-            a = a * k
         return a # alignment weights
 
     def forward(self, ht, hs, t, mask):
-        if self.type == "local-p":
-            hs, mask, pt, k = self.window(ht, hs, t, mask)
-        else:
-            if self.type == "local-m":
-                hs, mask = self.window(ht, hs, t, mask)
-            else:
-                mask = mask[0]
-            k = None
         a = self.align(ht, hs, mask, k) # alignment vector
         c = a.bmm(hs) # context vector
         h = torch.cat((c, ht), 2)
