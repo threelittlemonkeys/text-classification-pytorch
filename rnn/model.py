@@ -36,6 +36,7 @@ class rnn(nn.Module):
             dropout = DROPOUT,
             bidirectional = BIDIRECTIONAL
         )
+        self.attn = attn()
         self.dropout = nn.Dropout(DROPOUT)
         self.out = nn.Linear(HIDDEN_SIZE, num_labels)
         self.softmax = nn.LogSoftmax(1)
@@ -56,7 +57,10 @@ class rnn(nn.Module):
         x = nn.utils.rnn.pack_padded_sequence(x, mask[1], batch_first = True)
         h, _ = self.rnn(x, self.hidden)
         h, _ = nn.utils.rnn.pad_packed_sequence(h, batch_first = True)
-        h = h.gather(1, mask[1].view(-1, 1, 1).expand(-1, -1, h.size(2)) - 1)
+        if self.attn:
+            h = self.attn(h, mask[0])
+        else:
+            h = h.gather(1, mask[1].view(-1, 1, 1).expand(-1, -1, h.size(2)) - 1)
         h = self.dropout(h)
         h = self.out(h).squeeze(1)
         h = self.softmax(h)
@@ -67,21 +71,18 @@ class attn(nn.Module): # attention layer
         super().__init__()
 
         # architecture
-        self.Wa = nn.Linear(HIDDEN_SIZE, HIDDEN_SIZE)
-        self.Wc = nn.Linear(HIDDEN_SIZE * 2, HIDDEN_SIZE)
+        self.Wa = nn.Linear(HIDDEN_SIZE, 1)
 
-    def align(self, ht, hs, mask):
-        a = ht.bmm(self.Wa(hs).transpose(1, 2))
-        a = a.masked_fill(mask.unsqueeze(1), -10000) # masking in log space
-        a = F.softmax(a, 2)
+    def align(self, h, mask):
+        a = self.Wa(h)
+        a = a.masked_fill(mask.unsqueeze(2), -10000) # masking in log space
+        a = F.softmax(a, 1) # [B, L, 1]
         return a # alignment weights
 
-    def forward(self, ht, hs, t, mask):
-        a = self.align(ht, hs, mask, k) # alignment vector
-        c = a.bmm(hs) # context vector
-        h = torch.cat((c, ht), 2)
-        self.hidden = F.tanh(self.Wc(h)) # attentional vector
-        return self.hidden
+    def forward(self, h, mask):
+        a = self.align(h, mask) # alignment vector
+        v = (a * h).sum(1) # representation vector
+        return v
 
 def Tensor(*args):
     x = torch.Tensor(*args)
