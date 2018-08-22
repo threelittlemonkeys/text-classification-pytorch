@@ -13,10 +13,7 @@ VERBOSE = False
 SAVE_EVERY = 10
 
 PAD = "<PAD>" # padding
-UNK = "<UNK>" # unknown token
-
 PAD_IDX = 0
-UNK_IDX = 1
 
 torch.manual_seed(1)
 CUDA = torch.cuda.is_available()

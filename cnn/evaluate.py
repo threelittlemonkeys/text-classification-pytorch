@@ -44,8 +44,8 @@ def predict():
     for line in fo:
         line, y0 = line.split("\t")
         x = tokenize(line, "char")
-        y0 = y0.strip()
         x = [word_to_idx[i] for i in x if i in word_to_idx]
+        y0 = y0.strip()
         data.append([line, x, y0])
         if len(data) == BATCH_SIZE:
             result.extend(run_model(model, idx_to_tag, data))

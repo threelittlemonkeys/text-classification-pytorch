@@ -20,7 +20,7 @@ def run_model(model, idx_to_tag, data):
     batch = []
     z = len(data)
     while len(data) < BATCH_SIZE:
-        data.append(["", [UNK_IDX], ""])
+        data.append(["", [PAD_IDX], ""])
     data.sort(key = lambda x: len(x[1]), reverse = True)
     batch_len = len(data[0][1])
     batch = LongTensor([x[1] + [PAD_IDX] * (batch_len - len(x[1])) for x in data])
@@ -45,8 +45,8 @@ def predict():
     for line in fo:
         line, y0 = line.split("\t")
         x = tokenize(line, "char")
+        x = [word_to_idx[i] for i in x if i in word_to_idx]
         y0 = y0.strip()
-        x = [word_to_idx[i] if i in word_to_idx else UNK_IDX for i in x]
         data.append([line, x, y0])
         if len(data) == BATCH_SIZE:
             result.extend(run_model(model, idx_to_tag, data))

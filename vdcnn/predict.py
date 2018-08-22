@@ -36,7 +36,7 @@ def predict():
     fo = open(sys.argv[4])
     for line in fo:
         line = line.strip()
-        tokens = tokenize(line, "char")[:SEQ_LEN]
+        x = tokenize(line, "char")[:SEQ_LEN]
         x = [word_to_idx[i] for i in tokens if i in word_to_idx]
         data.append([line, x])
         if len(data) == BATCH_SIZE:
