@@ -60,6 +60,7 @@ def evaluate(result):
     s = defaultdict(int) # entire set
     p = defaultdict(int) # positive
     t = defaultdict(int) # true positive
+    a = [0, 0] # average
     for x in result:
         y0 = x[2] # actual value
         y1 = x[3] # predicted outcome
@@ -70,10 +71,16 @@ def evaluate(result):
     for y in sorted(s.keys()):
         prec = t[y] / p[y] if p[y] else 0
         rec = t[y] / s[y]
+        a[0] += prec
+        a[1] += rec
         print("\nlabel = %s" % y)
-        print("precision = %.2f (%d/%d)" % (prec, t[y], p[y]))
-        print("recall = %.2f (%d/%d)" % (rec, t[y], s[y]))
-        print("f1 = %.2f" % ((2 * prec * rec / (prec + rec)) if prec + rec else 0))
+        print("precision = %f (%d/%d)" % (prec, t[y], p[y]))
+        print("recall = %f (%d/%d)" % (rec, t[y], s[y]))
+        print("f1 = %f" % ((2 * prec * rec / (prec + rec)) if prec + rec else 0))
+    a = [x / len(s) for x in a]
+    print("\nprecision = %f" % a[0])
+    print("recall = %f" % a[1])
+    print("f1 = %f" % (2 * a[0] * a[1] / (a[0] + a[1])))
 
 if __name__ == "__main__":
     if len(sys.argv) != 5:
