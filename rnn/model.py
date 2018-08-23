@@ -13,7 +13,10 @@ VERBOSE = False
 SAVE_EVERY = 10
 
 PAD = "<PAD>" # padding
+UNK = "<UNK>" # unknown token
+
 PAD_IDX = 0
+UNK_IDX = 1
 
 torch.manual_seed(1)
 CUDA = torch.cuda.is_available()
@@ -21,7 +24,8 @@ CUDA = torch.cuda.is_available()
 class rnn(nn.Module):
     def __init__(self, vocab_size, num_labels):
         super().__init__()
-        fc_hidden_size = EMBED_SIZE + HIDDEN_SIZE * 2 # residual connection
+        rc = True # residual connection
+        fc_hidden_size = (EMBED_SIZE + HIDDEN_SIZE) if rc else HIDDEN_SIZE
 
         # architecture
         self.embed = nn.Embedding(vocab_size, EMBED_SIZE, padding_idx = PAD_IDX)
@@ -62,9 +66,9 @@ class rnn(nn.Module):
         h1, _ = nn.utils.rnn.pad_packed_sequence(h1, batch_first = True)
         h2, _ = nn.utils.rnn.pad_packed_sequence(h2, batch_first = True)
         if self.attn:
-            h = self.attn(torch.cat((x, h1, h2), 2), mask[0])
+            h = self.attn(torch.cat((x, h2), 2), mask[0])
         else:
-            h = h2.gather(1, mask[1].view(-1, 1, 1).expand(-1, -1, h2.size(2)) - 1)
+            h = gather_output(h2, mask[1])
         h = self.dropout(h)
         h = self.fc(h).squeeze(1)
         h = self.softmax(h)
@@ -105,6 +109,10 @@ def scalar(x):
 
 def argmax(x):
     return scalar(torch.max(x, 0)[1]) # for 1D tensor
+
+def gather_output(x, mask): # gather the last RNN output
+    idx = mask.view(-1, 1, 1).expand(-1, -1, x.size(2)) - 1 # [B, 1, H]
+    return x.gather(1, idx)
 
 def maskset(x):
     mask = x.data.eq(PAD_IDX)
