@@ -3,7 +3,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 BATCH_SIZE = 128
-EMBED_SIZE = 300
+EMBED_SIZE = 100
 HIDDEN_SIZE = 1000
 NUM_LAYERS = 2
 DROPOUT = 0.5
@@ -22,26 +22,21 @@ torch.manual_seed(1)
 CUDA = torch.cuda.is_available()
 
 class rnn(nn.Module):
-    def __init__(self, vocab_size, num_labels):
+    def __init__(self, rnn_type, vocab_size, num_labels):
         super().__init__()
-        rc = True # residual connection
-        fc_hidden_size = (EMBED_SIZE + HIDDEN_SIZE) if rc else HIDDEN_SIZE
+        self.rnn_type = rnn_type
+        fc_hidden_size = (EMBED_SIZE + HIDDEN_SIZE * 2) if RESIDUAL else HIDDEN_SIZE
 
         # architecture
         self.embed = nn.Embedding(vocab_size, EMBED_SIZE, padding_idx = PAD_IDX)
-        self.rnn1 = nn.LSTM( # LSTM or GRU
+        self.rnn = getattr(nn, rnn_type)( # LSTM or GRU
             input_size = EMBED_SIZE,
             hidden_size = HIDDEN_SIZE // NUM_DIRS,
+            num_layers = NUM_LAYERS,
             batch_first = True,
             bidirectional = BIDIRECTIONAL
         )
-        self.rnn2 = nn.LSTM( # LSTM or GRU
-            input_size = HIDDEN_SIZE,
-            hidden_size = HIDDEN_SIZE // NUM_DIRS,
-            batch_first = True,
-            bidirectional = BIDIRECTIONAL
-        )
-        self.attn = attn(fc_hidden_size)
+        self.attn = None # attn(EMBED_SIZE + HIDDEN_SIZE * 2)
         self.dropout = nn.Dropout(DROPOUT)
         self.fc = nn.Linear(fc_hidden_size, num_labels)
         self.softmax = nn.LogSoftmax(1)
@@ -50,25 +45,29 @@ class rnn(nn.Module):
             self = self.cuda()
 
     def init_hidden(self, rnn_type): # initialize hidden states
-        h = zeros(NUM_DIRS, BATCH_SIZE, HIDDEN_SIZE // NUM_DIRS) # hidden states
+        h = zeros(NUM_LAYERS * NUM_DIRS, BATCH_SIZE, HIDDEN_SIZE // NUM_DIRS) # hidden state
         if rnn_type == "LSTM":
-            c = zeros(NUM_DIRS, BATCH_SIZE, HIDDEN_SIZE // NUM_DIRS) # cell states
+            c = zeros(NUM_LAYERS * NUM_DIRS, BATCH_SIZE, HIDDEN_SIZE // NUM_DIRS) # cell state
             return (h, c)
         return h
 
     def forward(self, x, mask):
-        self.hidden1 = self.init_hidden("LSTM") # LSTM or GRU
-        self.hidden2 = self.init_hidden("LSTM") # LSTM or GRU
+        self.hidden = self.init_hidden(self.rnn_type)
         x = self.embed(x)
         h = nn.utils.rnn.pack_padded_sequence(x, mask[1], batch_first = True)
-        h1, _ = self.rnn1(h, self.hidden1)
-        h2, _ = self.rnn2(h1, self.hidden2)
-        h1, _ = nn.utils.rnn.pad_packed_sequence(h1, batch_first = True)
-        h2, _ = nn.utils.rnn.pad_packed_sequence(h2, batch_first = True)
+        h, self.hidden = self.rnn(h, self.hidden)
+        h, _ = nn.utils.rnn.pad_packed_sequence(h, batch_first = True)
+        if self.rnn_type == "LSTM":
+            self.hidden = self.hidden[-1] # cell state
+        h1 = torch.cat((self.hidden[0], self.hidden[1]), 1)
+        h2 = torch.cat((self.hidden[2], self.hidden[3]), 1)
+        print(x.size())
+        print(h1.size())
+        exit()
         if self.attn:
-            h = self.attn(torch.cat((x, h2), 2), mask[0])
+            h = self.attn(torch.cat((x, h1, h2), 2), mask[0])
         else:
-            h = gather_output(h2, mask[1])
+            h = h
         h = self.dropout(h)
         h = self.fc(h).squeeze(1)
         h = self.softmax(h)

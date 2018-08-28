@@ -8,7 +8,7 @@ def load_model():
     word_to_idx = load_word_to_idx(sys.argv[2])
     tag_to_idx = load_tag_to_idx(sys.argv[3])
     idx_to_tag = [tag for tag, _ in sorted(tag_to_idx.items(), key = lambda x: x[1])]
-    model = rnn(len(word_to_idx), len(tag_to_idx))
+    model = rnn("LSTM", len(word_to_idx), len(tag_to_idx))
     model.eval()
     if CUDA:
         model = model.cuda()
