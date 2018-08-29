@@ -5,7 +5,6 @@ import torch.nn.functional as F
 BATCH_SIZE = 128
 EMBED_SIZE = 100
 HIDDEN_SIZE = 1000
-NUM_LAYERS = 2
 DROPOUT = 0.5
 BIDIRECTIONAL = True
 NUM_DIRS = 2 if BIDIRECTIONAL else 1
@@ -25,71 +24,73 @@ class rnn(nn.Module):
     def __init__(self, rnn_type, vocab_size, num_labels):
         super().__init__()
         self.rnn_type = rnn_type
-        fc_hidden_size = (EMBED_SIZE + HIDDEN_SIZE * 2) if RESIDUAL else HIDDEN_SIZE
 
         # architecture
         self.embed = nn.Embedding(vocab_size, EMBED_SIZE, padding_idx = PAD_IDX)
-        self.rnn = getattr(nn, rnn_type)( # LSTM or GRU
+        self.rnn1 = getattr(nn, rnn_type)(
             input_size = EMBED_SIZE,
             hidden_size = HIDDEN_SIZE // NUM_DIRS,
-            num_layers = NUM_LAYERS,
             batch_first = True,
             bidirectional = BIDIRECTIONAL
         )
-        self.attn = None # attn(EMBED_SIZE + HIDDEN_SIZE * 2)
+        self.rnn2 = getattr(nn, rnn_type)(
+            input_size = HIDDEN_SIZE,
+            hidden_size = HIDDEN_SIZE // NUM_DIRS,
+            batch_first = True,
+            bidirectional = BIDIRECTIONAL
+        )
+        self.attn = attn(EMBED_SIZE + HIDDEN_SIZE * 2)
         self.dropout = nn.Dropout(DROPOUT)
-        self.fc = nn.Linear(fc_hidden_size, num_labels)
+        self.fc = nn.Linear(HIDDEN_SIZE, num_labels)
         self.softmax = nn.LogSoftmax(1)
 
         if CUDA:
             self = self.cuda()
 
     def init_hidden(self, rnn_type): # initialize hidden states
-        h = zeros(NUM_LAYERS * NUM_DIRS, BATCH_SIZE, HIDDEN_SIZE // NUM_DIRS) # hidden state
+        h = zeros(NUM_DIRS, BATCH_SIZE, HIDDEN_SIZE // NUM_DIRS) # hidden state
         if rnn_type == "LSTM":
-            c = zeros(NUM_LAYERS * NUM_DIRS, BATCH_SIZE, HIDDEN_SIZE // NUM_DIRS) # cell state
+            c = zeros(NUM_DIRS, BATCH_SIZE, HIDDEN_SIZE // NUM_DIRS) # cell state
             return (h, c)
         return h
 
     def forward(self, x, mask):
-        self.hidden = self.init_hidden(self.rnn_type)
+        self.hidden1 = self.init_hidden(self.rnn_type)
+        self.hidden2 = self.init_hidden(self.rnn_type)
         x = self.embed(x)
         h = nn.utils.rnn.pack_padded_sequence(x, mask[1], batch_first = True)
-        h, self.hidden = self.rnn(h, self.hidden)
-        h, _ = nn.utils.rnn.pad_packed_sequence(h, batch_first = True)
-        if self.rnn_type == "LSTM":
-            self.hidden = self.hidden[-1] # cell state
-        h1 = torch.cat((self.hidden[0], self.hidden[1]), 1)
-        h2 = torch.cat((self.hidden[2], self.hidden[3]), 1)
-        print(x.size())
-        print(h1.size())
-        exit()
+        h1, self.hidden1 = self.rnn1(h, self.hidden1)
+        h2, self.hidden2 = self.rnn2(h1, self.hidden2)
+        c = self.hidden2 if self.rnn_type == "GRU" else self.hidden2[-1]
+        c = torch.cat([h for h in c[-NUM_DIRS:]], 1) # final cell state
         if self.attn:
-            h = self.attn(torch.cat((x, h1, h2), 2), mask[0])
-        else:
-            h = h
-        h = self.dropout(h)
-        h = self.fc(h).squeeze(1)
+            h1, _ = nn.utils.rnn.pad_packed_sequence(h1, batch_first = True)
+            h2, _ = nn.utils.rnn.pad_packed_sequence(h2, batch_first = True)
+            c = self.attn(c, torch.cat((x, h1, h2), 2), mask[0])
+        h = self.dropout(c)
+        h = self.fc(h)
         h = self.softmax(h)
         return h
 
 class attn(nn.Module): # attention layer
-    def __init__(self, hidden_size):
+    def __init__(self, attn_size):
         super().__init__()
 
         # architecture
-        self.Wa = nn.Linear(hidden_size, 1)
+        self.Wa = nn.Linear(attn_size, 1)
+        self.Wc = nn.Linear(HIDDEN_SIZE + attn_size, HIDDEN_SIZE)
 
     def align(self, h, mask):
-        a = self.Wa(h) # [B, L, 1]
-        a = a.masked_fill(mask.unsqueeze(2), -10000) # masking in log space
-        a = F.softmax(a, 1)
+        a = self.Wa(h).transpose(1, 2) # [B, 1, L]
+        a = a.masked_fill(mask.unsqueeze(1), -10000) # masking in log space
+        a = F.softmax(a, 2)
         return a # alignment weights
 
-    def forward(self, h, mask):
+    def forward(self, c, h, mask):
         a = self.align(h, mask) # alignment vector
-        v = (a * h).sum(1) # representation vector
-        return v
+        v = a.bmm(h).squeeze(1) # representation vector
+        c = self.Wc(torch.cat((c, v), 1)) # attentional vector
+        return c
 
 def Tensor(*args):
     x = torch.Tensor(*args)
@@ -108,10 +109,6 @@ def scalar(x):
 
 def argmax(x):
     return scalar(torch.max(x, 0)[1]) # for 1D tensor
-
-def gather_output(x, mask): # gather the last RNN output
-    idx = mask.view(-1, 1, 1).expand(-1, -1, x.size(2)) - 1 # [B, 1, H]
-    return x.gather(1, idx)
 
 def maskset(x):
     mask = x.data.eq(PAD_IDX)
