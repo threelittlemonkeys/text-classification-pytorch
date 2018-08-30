@@ -75,11 +75,11 @@ def evaluate(result):
         print("\nlabel = %s" % y)
         print("precision = %f (%d/%d)" % (prec, t[y], p[y]))
         print("recall = %f (%d/%d)" % (rec, t[y], s[y]))
-        print("f1 = %f" % ((2 * prec * rec / (prec + rec)) if prec + rec else 0))
+        print("f1 = %f" % f1(prec, rec))
     a = [x / len(s) for x in a]
     print("\nprecision = %f" % a[0])
     print("recall = %f" % a[1])
-    print("f1 = %f" % (2 * a[0] * a[1] / (a[0] + a[1])))
+    print("f1 = %f" % f1(*a))
 
 if __name__ == "__main__":
     if len(sys.argv) != 5:
