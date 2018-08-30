@@ -34,7 +34,7 @@ def run_model(model, idx_to_tag, data):
         if VERBOSE:
             x = data[i][0]
             y0 = data[i][2]
-            print("\t".join([x, y0, y1, str(round(p, 4))]))
+            print("\t".join([x, y0, y1, str(round(p, 6))]))
     return data[:z]
 
 def predict():

@@ -18,7 +18,7 @@ PAD_IDX = 0
 torch.manual_seed(1)
 CUDA = torch.cuda.is_available()
 
-class word_cnn(nn.Module):
+class cnn(nn.Module):
     def __init__(self, vocab_size, num_labels):
         super().__init__()
 

@@ -3,7 +3,8 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 BATCH_SIZE = 128
-EMBED_SIZE = 100
+EMBED_SIZE = 300
+NUM_FEATURE_MAPS = 300
 HIDDEN_SIZE = 1000
 DROPOUT = 0.5
 BIDIRECTIONAL = True
@@ -39,7 +40,7 @@ class rnn(nn.Module):
             batch_first = True,
             bidirectional = BIDIRECTIONAL
         )
-        self.attn = attn(EMBED_SIZE + HIDDEN_SIZE * 2)
+        self.attn = attn(HIDDEN_SIZE)
         self.dropout = nn.Dropout(DROPOUT)
         self.fc = nn.Linear(HIDDEN_SIZE, num_labels)
         self.softmax = nn.LogSoftmax(1)
@@ -66,7 +67,8 @@ class rnn(nn.Module):
         if self.attn:
             h1, _ = nn.utils.rnn.pad_packed_sequence(h1, batch_first = True)
             h2, _ = nn.utils.rnn.pad_packed_sequence(h2, batch_first = True)
-            c = self.attn(c, torch.cat((x, h1, h2), 2), mask[0])
+            c = self.attn(c, h2, mask[0])
+            # c = self.attn(c, torch.cat((x, h0, h2), 2), mask[0])
         h = self.dropout(c)
         h = self.fc(h)
         h = self.softmax(h)

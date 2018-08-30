@@ -8,7 +8,7 @@ def load_model():
     word_to_idx = load_word_to_idx(sys.argv[2])
     tag_to_idx = load_tag_to_idx(sys.argv[3])
     idx_to_tag = [tag for tag, _ in sorted(tag_to_idx.items(), key = lambda x: x[1])]
-    model = word_cnn(len(word_to_idx), len(tag_to_idx))
+    model = cnn(len(word_to_idx), len(tag_to_idx))
     model.eval()
     if CUDA:
         model = model.cuda()
@@ -59,6 +59,7 @@ def evaluate(result):
     s = defaultdict(int) # entire set
     p = defaultdict(int) # positive
     t = defaultdict(int) # true positive
+    a = [0, 0] # average
     for x in result:
         y0 = x[2] # actual value
         y1 = x[3] # predicted outcome
@@ -69,10 +70,16 @@ def evaluate(result):
     for y in s.keys():
         prec = t[y] / p[y] if p[y] else 0
         rec = t[y] / s[y]
+        a[0] += prec
+        a[1] += rec
         print("\nlabel = %s" % y)
-        print("precision = %.2f (%d/%d)" % (prec, t[y], p[y]))
-        print("recall = %.2f (%d/%d)" % (rec, t[y], s[y]))
-        print("f1 = %.2f" % ((2 * prec * rec / (prec + rec)) if prec + rec else 0))
+        print("precision = %f (%d/%d)" % (prec, t[y], p[y]))
+        print("recall = %f (%d/%d)" % (rec, t[y], s[y]))
+        print("f1 = %f" % ((2 * prec * rec / (prec + rec)) if prec + rec else 0))
+    a = [x / len(s) for x in a]
+    print("\nprecision = %f" % a[0])
+    print("recall = %f" % a[1])
+    print("f1 = %f" % (2 * a[0] * a[1] / (a[0] + a[1])))
 
 if __name__ == "__main__":
     if len(sys.argv) != 5:

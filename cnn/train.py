@@ -35,7 +35,7 @@ def load_data():
 def train():
     num_epochs = int(sys.argv[5])
     data, word_to_idx, tag_to_idx = load_data()
-    model = word_cnn(len(word_to_idx), len(tag_to_idx))
+    model = cnn(len(word_to_idx), len(tag_to_idx))
     optim = torch.optim.SGD(model.parameters(), lr = LEARNING_RATE, weight_decay = WEIGHT_DECAY)
     epoch = load_checkpoint(sys.argv[1], model) if isfile(sys.argv[1]) else 0
     filename = re.sub("\.epoch[0-9]+$", "", sys.argv[1])
