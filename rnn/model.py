@@ -8,6 +8,9 @@ HIDDEN_SIZE = 1000
 DROPOUT = 0.5
 BIDIRECTIONAL = True
 NUM_DIRS = 2 if BIDIRECTIONAL else 1
+NUM_HEADS = 8
+DK = HIDDEN_SIZE // NUM_HEADS # dimension of key
+DV = HIDDEN_SIZE // NUM_HEADS # dimension of value
 VERBOSE = False
 SAVE_EVERY = 10
 
@@ -39,8 +42,9 @@ class rnn(nn.Module):
             batch_first = True,
             bidirectional = BIDIRECTIONAL
         )
-        self.attn = attn(HIDDEN_SIZE)
+        # self.attn = attn(HIDDEN_SIZE)
         # self.attn = attn(EMBED_SIZE + HIDDEN_SIZE * 2)
+        self.attn_mh = attn_mh()
         self.dropout = nn.Dropout(DROPOUT)
         self.fc = nn.Linear(HIDDEN_SIZE, num_labels)
         self.softmax = nn.LogSoftmax(1)
@@ -60,21 +64,21 @@ class rnn(nn.Module):
         self.hidden2 = self.init_hidden(self.rnn_type)
         x = self.embed(x)
         h = nn.utils.rnn.pack_padded_sequence(x, mask[1], batch_first = True)
-        h1, self.hidden1 = self.rnn1(h, self.hidden1)
-        h2, self.hidden2 = self.rnn2(h1, self.hidden2)
-        c = self.hidden2 if self.rnn_type == "GRU" else self.hidden2[-1]
-        c = torch.cat([h for h in c[-NUM_DIRS:]], 1) # final cell state
+        o1, self.hidden1 = self.rnn1(h, self.hidden1)
+        o2, self.hidden2 = self.rnn2(o1, self.hidden2)
+        h = self.hidden2 if self.rnn_type == "GRU" else self.hidden2[-1]
+        h = torch.cat([c for c in h[-NUM_DIRS:]], 1) # final cell state
         if self.attn:
-            h1, _ = nn.utils.rnn.pad_packed_sequence(h1, batch_first = True)
-            h2, _ = nn.utils.rnn.pad_packed_sequence(h2, batch_first = True)
-            c = self.attn(c, h2, mask[0])
-            # c = self.attn(c, torch.cat((x, h1, h2), 2), mask[0])
-        h = self.dropout(c)
+            o1, _ = nn.utils.rnn.pad_packed_sequence(o1, batch_first = True)
+            o2, _ = nn.utils.rnn.pad_packed_sequence(o2, batch_first = True)
+            h = self.attn(h, o2, mask[0])
+            # h = self.attn(h, torch.cat((x, o1, o2), 2), mask[0])
+        h = self.dropout(h)
         h = self.fc(h)
-        h = self.softmax(h)
-        return h
+        y = self.softmax(h)
+        return y
 
-class attn(nn.Module): # attention layer
+class attn(nn.Module): # attention
     def __init__(self, attn_size):
         super().__init__()
 
@@ -93,6 +97,37 @@ class attn(nn.Module): # attention layer
         v = a.bmm(h).squeeze(1) # representation vector
         c = self.Wc(torch.cat((c, v), 1)) # attentional vector
         return c
+
+class attn_mh(nn.Module): # multi-head attention
+    def __init__(self):
+        super().__init__()
+
+        # architecture
+        self.Wq = nn.Linear(EMBED_SIZE, NUM_HEADS * DK) # query
+        self.Wk = nn.Linear(EMBED_SIZE, NUM_HEADS * DK) # key for attention distribution
+        self.Wv = nn.Linear(EMBED_SIZE, NUM_HEADS * DV) # value for context representation
+        self.Wo = nn.Linear(NUM_HEADS * DV, EMBED_SIZE)
+        self.dropout = nn.Dropout(DROPOUT)
+        self.norm = nn.LayerNorm(EMBED_SIZE)
+
+    def attn_sdp(self, q, k, v, mask): # scaled dot-product attention
+        c = np.sqrt(DK) # scale factor
+        a = torch.matmul(q, k.transpose(2, 3)) / c # compatibility function
+        a = a.masked_fill(mask, -10000) # masking in log space
+        a = F.softmax(a, -1)
+        a = torch.matmul(a, v)
+        return a # attention weights
+
+    def forward(self, q, k, v, mask):
+        x = q # identity
+        q = self.Wq(q).view(BATCH_SIZE, -1, NUM_HEADS, DK).transpose(1, 2)
+        k = self.Wk(k).view(BATCH_SIZE, -1, NUM_HEADS, DK).transpose(1, 2)
+        v = self.Wv(v).view(BATCH_SIZE, -1, NUM_HEADS, DV).transpose(1, 2)
+        z = self.attn_sdp(q, k, v, mask)
+        z = z.transpose(1, 2).contiguous().view(BATCH_SIZE, -1, NUM_HEADS * DV)
+        z = self.Wo(z)
+        z = self.norm(x + self.dropout(z)) # residual connection and dropout
+        return z
 
 def Tensor(*args):
     x = torch.Tensor(*args)
