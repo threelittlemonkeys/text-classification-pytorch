@@ -42,9 +42,9 @@ class rnn(nn.Module):
             batch_first = True,
             bidirectional = BIDIRECTIONAL
         )
-        # self.attn = attn(HIDDEN_SIZE)
+        self.attn = attn(HIDDEN_SIZE)
         # self.attn = attn(EMBED_SIZE + HIDDEN_SIZE * 2)
-        self.attn_mh = attn_mh()
+        # self.attn_mh = attn_mh()
         self.dropout = nn.Dropout(DROPOUT)
         self.fc = nn.Linear(HIDDEN_SIZE, num_labels)
         self.softmax = nn.LogSoftmax(1)
@@ -64,15 +64,15 @@ class rnn(nn.Module):
         self.hidden2 = self.init_hidden(self.rnn_type)
         x = self.embed(x)
         h = nn.utils.rnn.pack_padded_sequence(x, mask[1], batch_first = True)
-        o1, self.hidden1 = self.rnn1(h, self.hidden1)
-        o2, self.hidden2 = self.rnn2(o1, self.hidden2)
+        h1, self.hidden1 = self.rnn1(h, self.hidden1)
+        h2, self.hidden2 = self.rnn2(h1, self.hidden2)
         h = self.hidden2 if self.rnn_type == "GRU" else self.hidden2[-1]
-        h = torch.cat([c for c in h[-NUM_DIRS:]], 1) # final cell state
+        h = torch.cat([x for x in h[-NUM_DIRS:]], 1) # final cell state
         if self.attn:
-            o1, _ = nn.utils.rnn.pad_packed_sequence(o1, batch_first = True)
-            o2, _ = nn.utils.rnn.pad_packed_sequence(o2, batch_first = True)
-            h = self.attn(h, o2, mask[0])
-            # h = self.attn(h, torch.cat((x, o1, o2), 2), mask[0])
+            h1, _ = nn.utils.rnn.pad_packed_sequence(h1, batch_first = True)
+            h2, _ = nn.utils.rnn.pad_packed_sequence(h2, batch_first = True)
+            h = self.attn(h, h2, mask[0])
+            # h = self.attn(h, torch.cat((x, h1, h2), 2), mask[0])
         h = self.dropout(h)
         h = self.fc(h)
         y = self.softmax(h)
@@ -92,11 +92,11 @@ class attn(nn.Module): # attention
         a = F.softmax(a, 2)
         return a # alignment weights
 
-    def forward(self, c, h, mask):
-        a = self.align(h, mask) # alignment vector
-        v = a.bmm(h).squeeze(1) # representation vector
-        c = self.Wc(torch.cat((c, v), 1)) # attentional vector
-        return c
+    def forward(self, h, ht, mask):
+        a = self.align(ht, mask) # alignment vector
+        v = a.bmm(ht).squeeze(1) # representation vector
+        h = self.Wc(torch.cat((h, v), 1)) # attentional vector
+        return h
 
 class attn_mh(nn.Module): # multi-head attention
     def __init__(self):
