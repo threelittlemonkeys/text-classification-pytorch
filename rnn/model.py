@@ -1,3 +1,4 @@
+import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -42,9 +43,9 @@ class rnn(nn.Module):
             batch_first = True,
             bidirectional = BIDIRECTIONAL
         )
-        self.attn = attn(HIDDEN_SIZE)
+        # self.attn = attn(HIDDEN_SIZE)
         # self.attn = attn(EMBED_SIZE + HIDDEN_SIZE * 2)
-        # self.attn_mh = attn_mh()
+        self.attn = attn_mh()
         self.dropout = nn.Dropout(DROPOUT)
         self.fc = nn.Linear(HIDDEN_SIZE, num_labels)
         self.softmax = nn.LogSoftmax(1)
@@ -71,8 +72,9 @@ class rnn(nn.Module):
         if self.attn:
             h1, _ = nn.utils.rnn.pad_packed_sequence(h1, batch_first = True)
             h2, _ = nn.utils.rnn.pad_packed_sequence(h2, batch_first = True)
-            h = self.attn(h, h2, mask[0])
+            # h = self.attn(h, h2, mask[0])
             # h = self.attn(h, torch.cat((x, h1, h2), 2), mask[0])
+            h = self.attn(h, h2, h2, mask[0].view(BATCH_SIZE, 1, 1, -1))
         h = self.dropout(h)
         h = self.fc(h)
         y = self.softmax(h)
@@ -103,9 +105,9 @@ class attn_mh(nn.Module): # multi-head attention
         super().__init__()
 
         # architecture
-        self.Wq = nn.Linear(EMBED_SIZE, NUM_HEADS * DK) # query
-        self.Wk = nn.Linear(EMBED_SIZE, NUM_HEADS * DK) # key for attention distribution
-        self.Wv = nn.Linear(EMBED_SIZE, NUM_HEADS * DV) # value for context representation
+        self.Wq = nn.Linear(HIDDEN_SIZE, NUM_HEADS * DK) # query
+        self.Wk = nn.Linear(HIDDEN_SIZE, NUM_HEADS * DK) # key for attention distribution
+        self.Wv = nn.Linear(HIDDEN_SIZE, NUM_HEADS * DV) # value for context representation
         self.Wo = nn.Linear(NUM_HEADS * DV, EMBED_SIZE)
         self.dropout = nn.Dropout(DROPOUT)
         self.norm = nn.LayerNorm(EMBED_SIZE)
