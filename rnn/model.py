@@ -46,7 +46,6 @@ class rnn(nn.Module):
         # self.attn = attn(HIDDEN_SIZE)
         # self.attn = attn(EMBED_SIZE + HIDDEN_SIZE * 2)
         self.attn = attn_mh()
-        self.dropout = nn.Dropout(DROPOUT)
         self.fc = nn.Linear(HIDDEN_SIZE, num_labels)
         self.softmax = nn.LogSoftmax(1)
 
@@ -72,21 +71,23 @@ class rnn(nn.Module):
         if self.attn:
             h1, _ = nn.utils.rnn.pad_packed_sequence(h1, batch_first = True)
             h2, _ = nn.utils.rnn.pad_packed_sequence(h2, batch_first = True)
+            # global attention
             # h = self.attn(h, h2, mask[0])
             # h = self.attn(h, torch.cat((x, h1, h2), 2), mask[0])
+            # multi-head attention
             h = self.attn(h, h2, h2, mask[0].view(BATCH_SIZE, 1, 1, -1))
-        h = self.dropout(h)
         h = self.fc(h)
         y = self.softmax(h)
         return y
 
-class attn(nn.Module): # attention
+class attn(nn.Module): # global attention
     def __init__(self, attn_size):
         super().__init__()
 
         # architecture
         self.Wa = nn.Linear(attn_size, 1)
         self.Wc = nn.Linear(HIDDEN_SIZE + attn_size, HIDDEN_SIZE)
+        self.dropout = nn.Dropout(DROPOUT)
 
     def align(self, h, mask):
         a = self.Wa(h).transpose(1, 2) # [B, 1, L]
@@ -94,10 +95,10 @@ class attn(nn.Module): # attention
         a = F.softmax(a, 2)
         return a # alignment weights
 
-    def forward(self, h, ht, mask):
-        a = self.align(ht, mask) # alignment vector
-        v = a.bmm(ht).squeeze(1) # representation vector
-        h = self.Wc(torch.cat((h, v), 1)) # attentional vector
+    def forward(self, hc, ho, mask):
+        a = self.align(ho, mask) # alignment vector
+        c = a.bmm(ho).squeeze(1) # context vector
+        h = self.Wc(torch.cat((hc, self.dropout(c)), 1))
         return h
 
 class attn_mh(nn.Module): # multi-head attention
@@ -108,9 +109,9 @@ class attn_mh(nn.Module): # multi-head attention
         self.Wq = nn.Linear(HIDDEN_SIZE, NUM_HEADS * DK) # query
         self.Wk = nn.Linear(HIDDEN_SIZE, NUM_HEADS * DK) # key for attention distribution
         self.Wv = nn.Linear(HIDDEN_SIZE, NUM_HEADS * DV) # value for context representation
-        self.Wo = nn.Linear(NUM_HEADS * DV, EMBED_SIZE)
+        self.Wo = nn.Linear(NUM_HEADS * DV, HIDDEN_SIZE)
         self.dropout = nn.Dropout(DROPOUT)
-        self.norm = nn.LayerNorm(EMBED_SIZE)
+        self.norm = nn.LayerNorm(HIDDEN_SIZE)
 
     def attn_sdp(self, q, k, v, mask): # scaled dot-product attention
         c = np.sqrt(DK) # scale factor
@@ -127,7 +128,7 @@ class attn_mh(nn.Module): # multi-head attention
         v = self.Wv(v).view(BATCH_SIZE, -1, NUM_HEADS, DV).transpose(1, 2)
         z = self.attn_sdp(q, k, v, mask)
         z = z.transpose(1, 2).contiguous().view(BATCH_SIZE, -1, NUM_HEADS * DV)
-        z = self.Wo(z)
+        z = self.Wo(z).squeeze(1)
         z = self.norm(x + self.dropout(z)) # residual connection and dropout
         return z
 
