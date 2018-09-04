@@ -28,12 +28,12 @@ def run_model(model, idx_to_tag, data):
     result = model(batch, mask)
     for i in range(z):
         m = argmax(result[i])
+        y0 = data[i][2]
         y1 = idx_to_tag[m]
         p = scalar(torch.exp(result[i][m]))
-        data[i].extend([y1, p])
+        data[i] = (y0, y1)
         if VERBOSE:
             x = data[i][0]
-            y0 = data[i][2]
             print("\t".join([x, y0, y1, str(round(p, 6))]))
     return data[:z]
 
@@ -61,9 +61,7 @@ def evaluate(result):
     p = defaultdict(int) # positive
     t = defaultdict(int) # true positive
     a = [0, 0] # average
-    for x in result:
-        y0 = x[2] # actual value
-        y1 = x[3] # predicted outcome
+    for y0, y1 in result: # actual value, predicted outcome
         s[y0] += 1
         p[y1] += 1
         if y0 == y1:

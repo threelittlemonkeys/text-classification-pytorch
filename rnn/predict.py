@@ -21,26 +21,27 @@ def run_model(model, idx_to_tag, data):
     batch = []
     z = len(data)
     while len(data) < BATCH_SIZE:
-        data.append(["", [UNK_IDX]])
-    data.sort(key = lambda x: len(x[1]), reverse = True)
-    batch_len = len(data[0][1])
-    batch = LongTensor([x + [PAD_IDX] * (batch_len - len(x)) for _, x in data])
+        data.append([-1, "", [UNK_IDX]])
+    data.sort(key = lambda x: len(x[2]), reverse = True)
+    batch_len = len(data[0][2])
+    batch = LongTensor([x + [PAD_IDX] * (batch_len - len(x)) for _, _, x in data])
     mask = maskset(batch)
     result = model(batch, mask)
     for i in range(z):
         m = argmax(result[i])
         y = idx_to_tag[m]
-        data[i].append(y)
+        data[i] = data[i][:-1] + [y]
         if VERBOSE:
-            print(data[i][0])
+            print(data[i][1])
             y = enumerate(result[i].exp().tolist())
             y = sorted(y, key = lambda x: x[1], reverse = True)
             y = [(idx_to_tag[a], round(b, 4)) for a, b in y]
             for a, b in y:
                 print(a, b)
-    return data[:z]
+    return sorted(data[:z])
 
 def predict():
+    idx = 0
     data = []
     result = []
     model, word_to_idx, tag_to_idx, idx_to_tag = load_model()
@@ -49,12 +50,14 @@ def predict():
         line = line.strip()
         x = tokenize(line, "char")
         x = [word_to_idx[i] if i in word_to_idx else UNK_IDX for i in x]
-        data.append([line, x])
+        data.append([idx, line, x])
         if len(data) == BATCH_SIZE:
             result = run_model(model, idx_to_tag, data)
             for x in result:
                 print(x)
+            idx = 0
             data = []
+        idx += 1
     fo.close()
     if len(data):
         result = run_model(model, idx_to_tag, data)
