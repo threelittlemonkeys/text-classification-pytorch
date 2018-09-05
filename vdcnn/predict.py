@@ -31,7 +31,6 @@ def run_model(model, idx_to_tag, data):
 
 def predict():
     data = []
-    result = []
     model, word_to_idx, tag_to_idx, idx_to_tag = load_model()
     fo = open(sys.argv[4])
     for line in fo:

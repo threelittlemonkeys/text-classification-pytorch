@@ -38,7 +38,7 @@ def run_model(model, idx_to_tag, data):
             y = [(idx_to_tag[a], round(b, 4)) for a, b in y]
             for a, b in y:
                 print(a, b)
-    return sorted(data[:z])
+    return [(x[1], x[2]) for x in sorted(data[:z])]
 
 def predict():
     idx = 0
