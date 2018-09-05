@@ -31,10 +31,9 @@ def run_model(model, idx_to_tag, data):
         y0 = data[i][2]
         y1 = idx_to_tag[m]
         p = scalar(torch.exp(result[i][m]))
-        data[i] = (y0, y1)
         if VERBOSE:
-            x = data[i][0]
-            print("\t".join([x, y0, y1, str(round(p, 6))]))
+            print("\t".join([data[i][0], y0, y1, str(round(p, 6))]))
+        data[i] = (y0, y1)
     return data[:z]
 
 def predict():
