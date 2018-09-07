@@ -12,7 +12,7 @@ NUM_DIRS = 2 if BIDIRECTIONAL else 1
 NUM_HEADS = 8
 DK = HIDDEN_SIZE // NUM_HEADS # dimension of key
 DV = HIDDEN_SIZE // NUM_HEADS # dimension of value
-VERBOSE = False
+VERBOSE = True
 SAVE_EVERY = 10
 
 PAD = "<PAD>" # padding
@@ -83,20 +83,17 @@ class rnn(nn.Module):
 class attn(nn.Module): # global attention
     def __init__(self, attn_size):
         super().__init__()
+        self.Va = None # attention weights
 
         # architecture
         self.Wa = nn.Linear(attn_size, 1)
         self.Wc = nn.Linear(HIDDEN_SIZE + attn_size, HIDDEN_SIZE)
         self.dropout = nn.Dropout(DROPOUT)
 
-    def align(self, h, mask):
-        a = self.Wa(h).transpose(1, 2) # [B, 1, L]
-        a = a.masked_fill(mask.unsqueeze(1), -10000) # masking in log space
-        a = F.softmax(a, 2)
-        return a # alignment weights
-
     def forward(self, hc, ho, mask):
-        a = self.align(ho, mask) # alignment vector
+        a = self.Wa(ho).transpose(1, 2)
+        a = a.masked_fill(mask.unsqueeze(1), -10000) # masking in log space
+        a = self.Va = F.softmax(a, 2) # attention vector [B, 1, L]
         c = a.bmm(ho).squeeze(1) # context vector
         h = self.Wc(torch.cat((hc, self.dropout(c)), 1))
         return h
@@ -104,6 +101,7 @@ class attn(nn.Module): # global attention
 class attn_mh(nn.Module): # multi-head attention
     def __init__(self):
         super().__init__()
+        self.Va = None # query-key attention weights
 
         # architecture
         self.Wq = nn.Linear(HIDDEN_SIZE, NUM_HEADS * DK) # query
@@ -117,8 +115,8 @@ class attn_mh(nn.Module): # multi-head attention
         c = np.sqrt(DK) # scale factor
         a = torch.matmul(q, k.transpose(2, 3)) / c # compatibility function
         a = a.masked_fill(mask, -10000) # masking in log space
-        a = F.softmax(a, -1) # [B, NUM_HEADS, 1, L]
-        a = torch.matmul(a, v)
+        a = self.Va = F.softmax(a, -1) # [B, NUM_HEADS, 1, L]
+        a = torch.matmul(a, v) # [B, NUM_HEADS, 1, DV]
         return a # attention weights
 
     def forward(self, q, k, v, mask):
