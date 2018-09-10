@@ -43,7 +43,7 @@ def predict():
     fo = open(sys.argv[4])
     for line in fo:
         line, y0 = line.split("\t")
-        x = tokenize(line, "char")
+        x = tokenize(line, "word")
         x = [word_to_idx[i] if i in word_to_idx else UNK_IDX for i in x]
         y0 = y0.strip()
         data.append([line, x, y0])
