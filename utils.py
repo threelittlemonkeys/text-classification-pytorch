@@ -60,3 +60,16 @@ def f1(p, r):
     if p + r:
         return 2 * p * r / (p + r)
     return 0
+
+def heatmap(m, x, idx_to_word, delim = "\t"):
+    y = []
+    y.append([idx_to_word[c] for c in x]) # input
+    for v in m: # weights
+        y.append([x for x in v[:len(x)]])
+    return y
+
+def mat2csv(m, delim ="\t"):
+    csv = ""
+    for v in m:
+        csv += delim.join([str(x) for x in v]) + "\n"
+    return csv
