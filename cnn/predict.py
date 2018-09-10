@@ -2,7 +2,6 @@ import sys
 import re
 from model import *
 from utils import *
-from collections import defaultdict
 
 def load_model():
     word_to_idx = load_word_to_idx(sys.argv[2])
