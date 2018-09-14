@@ -24,7 +24,7 @@ def run_model(model, data, idx_to_word, idx_to_tag):
         data.append([-1, "", [UNK_IDX]])
     data.sort(key = lambda x: len(x[2]), reverse = True)
     batch_len = len(data[0][2])
-    batch = LongTensor([x + [PAD_IDX] * (batch_len - len(x)) for _, _, x in data])
+    batch = LongTensor([x[2] + [PAD_IDX] * (batch_len - len(x[2])) for x in data])
     mask = maskset(batch)
     result = model(batch, mask)
     Va = model.attn.Va.squeeze(2).tolist() # attention weights
@@ -48,7 +48,7 @@ def predict():
     fo = open(sys.argv[4])
     for line in fo:
         line = line.strip()
-        x = tokenize(line, "word")
+        x = tokenize(line, "char")
         x = [word_to_idx[i] if i in word_to_idx else UNK_IDX for i in x]
         data.append([idx, line, x])
         if len(data) == BATCH_SIZE:
