@@ -48,7 +48,7 @@ def predict():
     fo = open(sys.argv[4])
     for line in fo:
         line = line.strip()
-        x = tokenize(line, "char")
+        x = tokenize(line, UNIT)
         x = [word_to_idx[i] if i in word_to_idx else UNK_IDX for i in x]
         data.append([idx, line, x])
         if len(data) == BATCH_SIZE:
