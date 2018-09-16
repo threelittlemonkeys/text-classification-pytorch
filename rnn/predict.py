@@ -27,7 +27,8 @@ def run_model(model, data, idx_to_word, idx_to_tag):
     batch = LongTensor([x[2] + [PAD_IDX] * (batch_len - len(x[2])) for x in data])
     mask = maskset(batch)
     result = model(batch, mask)
-    Va = model.attn.Va.squeeze(2).tolist() # attention weights
+    if VERBOSE:
+        Va = model.attn.Va.squeeze(2).tolist() # attention weights
     for i in range(z):
         y = idx_to_tag[argmax(result[i])]
         data[i].append(y)
@@ -38,7 +39,7 @@ def run_model(model, data, idx_to_word, idx_to_tag):
             y = [(idx_to_tag[a], round(b, 4)) for a, b in y]
             for a, b in y:
                 print(a, b)
-            # print(mat2csv(heatmap(Va[i], data[i][2], idx_to_word)))
+            print(mat2csv(heatmap(Va[i], data[i][2], idx_to_word), n = 6))
     return [(x[1], x[3]) for x in sorted(data[:z])]
 
 def predict():
