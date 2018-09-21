@@ -69,10 +69,11 @@ def heatmap(m, x, idx_to_word, delim = "\t"):
     return y
 
 def mat2csv(m, delim ="\t", n = 0):
+    k = 10 ** -n
     csv = delim.join([x for x in m[0]]) + "\n"
     for v in m[1:]:
         if n:
-            csv += delim.join([str(round(x, n)) if x else "" for x in v]) + "\n"
+            csv += delim.join([str(round(x, n)) if x > k else "" for x in v]) + "\n"
         else:
             csv += delim.join([str(x) for x in v]) + "\n"
     return csv
