@@ -24,7 +24,11 @@ class cnn(nn.Module):
 
         # architecture
         self.embed = nn.Embedding(vocab_size, EMBED_SIZE, padding_idx = PAD_IDX)
-        self.conv = nn.ModuleList([nn.Conv2d(1, NUM_FEATURE_MAPS, (i, EMBED_SIZE)) for i in KERNEL_SIZES])
+        self.conv = nn.ModuleList([nn.Conv2d(
+            in_channels = 1,
+            out_channels = NUM_FEATURE_MAPS,
+            kernel_size = (i, EMBED_SIZE)
+        ) for i in KERNEL_SIZES])
         self.dropout = nn.Dropout(DROPOUT)
         self.fc = nn.Linear(len(KERNEL_SIZES) * NUM_FEATURE_MAPS, num_labels)
         self.softmax = nn.LogSoftmax(1)
@@ -33,12 +37,12 @@ class cnn(nn.Module):
             self = self.cuda()
 
     def forward(self, x):
-        x = self.embed(x) # [batch_size (N), seq_len (H), embed_size (W)]
-        x = x.unsqueeze(1) # [N, in_channels (Ci), H, W]
-        h = [conv(x) for conv in self.conv] # [N, out_channels (Co), H, W] * num_kernels (K)
-        h = [F.relu(k).squeeze(3) for k in h] # [N, Co, H] * K
-        h = [F.max_pool1d(k, k.size(2)).squeeze(2) for k in h] # [N, Co] * K
-        h = torch.cat(h, 1) # [N, Co * K]
+        x = self.embed(x) # [B, L, H]
+        x = x.unsqueeze(1) # [B, in_channels (Ci), L, H]
+        h = [conv(x) for conv in self.conv] # [B, out_channels (Co), L, H = 1] * num_kernels (K)
+        h = [F.relu(k).squeeze(3) for k in h] # [B, Co, L] * K
+        h = [F.max_pool1d(k, k.size(2)).squeeze(2) for k in h] # [B, Co] * K
+        h = torch.cat(h, 1) # [B, Co * K]
         h = self.dropout(h)
         h = self.fc(h) # fully connected layer 
         y = self.softmax(h)
