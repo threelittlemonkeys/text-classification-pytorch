@@ -39,7 +39,7 @@ class cnn(nn.Module):
     def forward(self, x):
         x = self.embed(x) # [B, L, H]
         x = x.unsqueeze(1) # [B, in_channels (Ci), L, H]
-        h = [conv(x) for conv in self.conv] # [B, out_channels (Co), L, H = 1] * num_kernels (K)
+        h = [conv(x) for conv in self.conv] # [B, out_channels (Co), L, 1] * num_kernels (K)
         h = [F.relu(k).squeeze(3) for k in h] # [B, Co, L] * K
         h = [F.max_pool1d(k, k.size(2)).squeeze(2) for k in h] # [B, Co] * K
         h = torch.cat(h, 1) # [B, Co * K]
