@@ -35,10 +35,8 @@ def run_model(model, data, idx_to_word, idx_to_tag):
         if VERBOSE:
             print(data[i][1])
             y = enumerate(result[i].exp().tolist())
-            y = sorted(y, key = lambda x: x[1], reverse = True)
-            y = [(idx_to_tag[a], round(b, 4)) for a, b in y]
-            for a, b in y:
-                print(a, b)
+            for a, b in sorted(y, key = lambda x: x[1], reverse = True):
+                print(idx_to_tag[a], round(b, 4))
             print(mat2csv(heatmap(Va[i], data[i][2], idx_to_word), n = 6))
     return [(x[1], x[3]) for x in sorted(data[:z])]
 
