@@ -1,22 +1,24 @@
 import sys
 import re
-from model import PAD, PAD_IDX
+from model import UNIT, PAD, UNK, PAD_IDX, UNK_IDX
 from utils import tokenize
 
-MIN_LEN = 5 # >= KERNEL_SIZES
+MIN_LEN = 5
 MAX_LEN = 50
 
 def load_data():
     data = []
-    word_to_idx = {PAD: PAD_IDX}
+    word_to_idx = {PAD: PAD_IDX, UNK: UNK_IDX}
     tag_to_idx = {}
     fo = open(sys.argv[1])
     for line in fo:
         x, y = line.split("\t")
-        x = tokenize(x, "char")
+        x = tokenize(x, UNIT if UNIT == "char" else "word")
         y = y.strip()
         if len(x) < MIN_LEN or len(x) > MAX_LEN:
             continue
+        if UNIT == "char+word":
+            x += list("".join(x))
         for w in x:
             if w not in word_to_idx:
                 word_to_idx[w] = len(word_to_idx)
