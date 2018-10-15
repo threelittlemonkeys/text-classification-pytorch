@@ -53,16 +53,16 @@ class rnn(nn.Module):
         if CUDA:
             self = self.cuda()
 
-    def init_hidden(self, rnn_type): # initialize hidden states
+    def init_hidden(self): # initialize hidden states
         h = zeros(NUM_DIRS, BATCH_SIZE, HIDDEN_SIZE // NUM_DIRS) # hidden state
-        if rnn_type == "LSTM":
+        if self.rnn_type == "LSTM":
             c = zeros(NUM_DIRS, BATCH_SIZE, HIDDEN_SIZE // NUM_DIRS) # cell state
             return (h, c)
         return h
 
     def forward(self, x, mask):
-        self.hidden1 = self.init_hidden(self.rnn_type)
-        self.hidden2 = self.init_hidden(self.rnn_type)
+        self.hidden1 = self.init_hidden()
+        self.hidden2 = self.init_hidden()
         x = self.embed(x)
         h = nn.utils.rnn.pack_padded_sequence(x, mask[1], batch_first = True)
         h1, self.hidden1 = self.rnn1(h, self.hidden1)
