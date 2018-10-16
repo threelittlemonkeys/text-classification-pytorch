@@ -30,7 +30,7 @@ def run_model(model, idx_to_tag, data):
         m = argmax(result[i])
         y0 = data[i][2]
         y1 = idx_to_tag[m]
-        p = scalar(torch.exp(result[i][m]))
+        p = torch.exp(result[i][m]).tolist()
         if VERBOSE:
             print("\t".join([data[i][0], y0, y1, str(round(p, 6))]))
         data[i] = (y0, y1)

@@ -144,10 +144,10 @@ def zeros(*args):
     return x.cuda() if CUDA else x
 
 def scalar(x):
-    return x.view(-1).data.tolist()[0]
+    return x.tolist()
 
 def argmax(x):
-    return scalar(torch.max(x, 0)[1]) # for 1D tensor
+    return torch.max(x, 0)[1].tolist() # for 1D tensor
 
 def maskset(x):
     mask = x.data.eq(PAD_IDX)

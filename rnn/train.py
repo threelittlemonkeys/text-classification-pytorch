@@ -52,7 +52,7 @@ def train():
             loss = F.nll_loss(model(x, mask), y)
             loss.backward()
             optim.step()
-            loss = scalar(loss)
+            loss = loss.tolist()
             loss_sum += loss
             # print("epoch = %d, iteration = %d, loss = %f" % (ei, ii, loss))
         timer = time.time() - timer
