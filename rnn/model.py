@@ -143,9 +143,6 @@ def zeros(*args):
     x = torch.zeros(*args)
     return x.cuda() if CUDA else x
 
-def scalar(x):
-    return x.tolist()
-
 def argmax(x):
     return torch.max(x, 0)[1].tolist() # for 1D tensor
 
