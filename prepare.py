@@ -4,7 +4,7 @@ from model import UNIT, PAD, UNK, PAD_IDX, UNK_IDX
 from utils import tokenize
 
 MIN_LEN = 5
-MAX_LEN = 50
+MAX_LEN = 100
 
 def load_data():
     data = []
@@ -13,12 +13,10 @@ def load_data():
     fo = open(sys.argv[1])
     for line in fo:
         x, y = line.split("\t")
-        x = tokenize(x, UNIT if UNIT == "char" else "word")
+        x = tokenize(x, UNIT)
         y = y.strip()
         if len(x) < MIN_LEN or len(x) > MAX_LEN:
             continue
-        if UNIT == "char+word":
-            x += list("".join(x))
         for w in x:
             if w not in word_to_idx:
                 word_to_idx[w] = len(word_to_idx)
