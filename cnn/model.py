@@ -52,8 +52,5 @@ def LongTensor(*args):
     x = torch.LongTensor(*args)
     return x.cuda() if CUDA else x
 
-def scalar(x):
-    return x.view(-1).data.tolist()[0]
-
 def argmax(x):
-    return scalar(torch.max(x, 0)[1]) # for 1D tensor
+    return torch.max(x, 0)[1].tolist() # for 1D tensor
