@@ -1,4 +1,4 @@
-# The Transformer in PyTorch
+# The Self-Attentive Encoder in PyTorch
 
 A PyTorch implementation of the Self-Attentive Encoder for text classification.
 
