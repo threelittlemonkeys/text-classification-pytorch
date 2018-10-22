@@ -95,7 +95,7 @@ class attn(nn.Module): # global attention
         a = self.Wa(ho).transpose(1, 2)
         a = a.masked_fill(mask.unsqueeze(1), -10000) # masking in log space
         a = self.Va = F.softmax(a, 2) # attention vector [B, 1, L]
-        c = a.bmm(ho).squeeze(1) # context vector
+        c = a.bmm(ho).squeeze(1) # context vector [B, H]
         h = self.Wc(torch.cat((hc, self.dropout(c)), 1))
         return h
 

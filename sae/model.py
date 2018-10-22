@@ -10,8 +10,10 @@ NUM_LAYERS = 4
 NUM_HEADS = 8 # number of heads
 DK = EMBED_SIZE // NUM_HEADS # dimension of key
 DV = EMBED_SIZE // NUM_HEADS # dimension of value
+NUM_FEATURE_MAPS = 300 # feature maps gnerated by each kenel
+KERNEL_SIZES = [1, 2, 3, 4, 5]
 DROPOUT = 0.5
-VERBOSE = True
+VERBOSE = False
 SAVE_EVERY = 10
 
 PAD = "<PAD>" # padding
@@ -31,7 +33,13 @@ class sae(nn.Module): # self attentive encoder
         self.embed = nn.Embedding(vocab_size, EMBED_SIZE, padding_idx = PAD_IDX)
         self.pe = pos_encoder() # positional encoding
         self.layers = nn.ModuleList([enc_layer() for _ in range(NUM_LAYERS)])
-        self.fc = nn.Linear(EMBED_SIZE, num_labels)
+        self.conv = nn.ModuleList([nn.Conv2d(
+            in_channels = 1,
+            out_channels = NUM_FEATURE_MAPS,
+            kernel_size = (i, EMBED_SIZE)
+        ) for i in KERNEL_SIZES])
+        self.dropout = nn.Dropout(DROPOUT)
+        self.fc = nn.Linear(len(KERNEL_SIZES) * NUM_FEATURE_MAPS, num_labels)
         self.softmax = nn.LogSoftmax(1)
 
         if CUDA:
@@ -42,7 +50,12 @@ class sae(nn.Module): # self attentive encoder
         h = x + self.pe(x.size(1))
         for layer in self.layers:
             h = layer(h, mask)
-        h = torch.sum(h, 1)
+        h = h.unsqueeze(1) # [B, in_channels (Ci), L, H]
+        h = [conv(h) for conv in self.conv] # [B, out_channels (Co), L, 1] * num_kernels (K)
+        h = [F.relu(k).squeeze(3) for k in h] # [B, Co, L] * K
+        h = [F.max_pool1d(k, k.size(2)).squeeze(2) for k in h] # [B, Co] * K
+        h = torch.cat(h, 1) # [B, Co * K]
+        h = self.dropout(h)
         h = self.fc(h)
         y = self.softmax(h)
         return y
