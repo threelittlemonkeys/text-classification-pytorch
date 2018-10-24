@@ -5,13 +5,13 @@ import torch.nn.functional as F
 
 UNIT = "char" # unit for tokenization (char, word)
 BATCH_SIZE = 128
-EMBED_SIZE = 128
+EMBED_SIZE = 64
 NUM_LAYERS = 4
 NUM_HEADS = 8 # number of heads
 DK = EMBED_SIZE // NUM_HEADS # dimension of key
 DV = EMBED_SIZE // NUM_HEADS # dimension of value
 NUM_FEATURE_MAPS = 300 # feature maps gnerated by each kenel
-KERNEL_SIZES = [2, 3, 4, 5]
+KERNEL_SIZES = [2, 3, 4]
 DROPOUT = 0.5
 VERBOSE = False
 SAVE_EVERY = 10
@@ -52,8 +52,7 @@ class sae(nn.Module): # self attentive encoder
         h = x + self.pe(x.size(1))
         for layer in self.layers:
             h = layer(h, mask)
-        h = h.transpose(1, 2)
-        h = F.max_pool1d(h, h.size(2)).squeeze(2)
+        h *= (1 - mask).view(BATCH_SIZE, -1, 1).float()
         '''
         h = h.unsqueeze(1) # [B, in_channels (Ci), L, H]
         h = [conv(h) for conv in self.conv] # [B, out_channels (Co), L, 1] * num_kernels (K)
@@ -62,8 +61,8 @@ class sae(nn.Module): # self attentive encoder
         h = torch.cat(h, 1) # [B, Co * K]
         h = self.dropout(h)
         h = self.fc(h)
-        '''
         y = self.softmax(h)
+        '''
         return y
 
 class enc_layer(nn.Module): # encoder layer
