@@ -5,14 +5,14 @@ import torch.nn.functional as F
 
 UNIT = "char" # unit for tokenization (char, word)
 BATCH_SIZE = 128
-EMBED_SIZE = 64
-NUM_LAYERS = 4
+EMBED_SIZE = 128
 NUM_HEADS = 8 # number of heads
 DK = EMBED_SIZE // NUM_HEADS # dimension of key
 DV = EMBED_SIZE // NUM_HEADS # dimension of value
-NUM_FEATURE_MAPS = 300 # feature maps gnerated by each kenel
-KERNEL_SIZES = [2, 3, 4]
 DROPOUT = 0.5
+HIDDEN_SIZE = 1000
+BIDIRECTIONAL = True
+NUM_DIRS = 2 if BIDIRECTIONAL else 1
 VERBOSE = False
 SAVE_EVERY = 10
 
@@ -28,20 +28,15 @@ CUDA = torch.cuda.is_available()
 class sae(nn.Module): # self attentive encoder
     def __init__(self, vocab_size, num_labels):
         super().__init__()
+        self.rnn_type = "LSTM"
+        self.num_layers = 2
 
         # architecture
         self.embed = nn.Embedding(vocab_size, EMBED_SIZE, padding_idx = PAD_IDX)
         self.pe = pos_encoder() # positional encoding
-        self.layers = nn.ModuleList([enc_layer() for _ in range(NUM_LAYERS)])
-        '''
-        self.conv = nn.ModuleList([nn.Conv2d(
-            in_channels = 1,
-            out_channels = NUM_FEATURE_MAPS,
-            kernel_size = (i, EMBED_SIZE)
-        ) for i in KERNEL_SIZES])
-        self.dropout = nn.Dropout(DROPOUT)
-        self.fc = nn.Linear(len(KERNEL_SIZES) * NUM_FEATURE_MAPS, num_labels)
-        '''
+        self.layers = nn.ModuleList([enc_layer() for _ in range(self.num_layers)])
+        self.rnn = rnn("LSTM", vocab_size, num_labels)
+        self.fc = nn.Linear(HIDDEN_SIZE, num_labels)
         self.softmax = nn.LogSoftmax(1)
 
         if CUDA:
@@ -53,16 +48,11 @@ class sae(nn.Module): # self attentive encoder
         for layer in self.layers:
             h = layer(h, mask)
         h *= (1 - mask).view(BATCH_SIZE, -1, 1).float()
-        '''
-        h = h.unsqueeze(1) # [B, in_channels (Ci), L, H]
-        h = [conv(h) for conv in self.conv] # [B, out_channels (Co), L, 1] * num_kernels (K)
-        h = [F.relu(k).squeeze(3) for k in h] # [B, Co, L] * K
-        h = [F.max_pool1d(k, k.size(2)).squeeze(2) for k in h] # [B, Co] * K
-        h = torch.cat(h, 1) # [B, Co * K]
-        h = self.dropout(h)
+        _, h = self.rnn(h, torch.sum((1 - mask).view(BATCH_SIZE, -1), 1))
+        h = h if self.rnn_type == "GRU" else h[-1]
+        h = torch.cat([x for x in h[-NUM_DIRS:]], 1) # final cell state
         h = self.fc(h)
         y = self.softmax(h)
-        '''
         return y
 
 class enc_layer(nn.Module): # encoder layer
@@ -139,12 +129,45 @@ class ffn(nn.Module): # position-wise feed-forward networks
         z = self.norm(x + self.dropout(z)) # residual connection and dropout
         return z
 
+class rnn(nn.Module):
+    def __init__(self, rnn_type, vocab_size, num_labels):
+        super().__init__()
+        self.rnn_type = rnn_type
+        self.num_layers = 2
+
+        # architecture
+        self.rnn = getattr(nn, rnn_type)(
+            input_size = EMBED_SIZE,
+            hidden_size = HIDDEN_SIZE // NUM_DIRS,
+            num_layers = self.num_layers,
+            batch_first = True,
+            bidirectional = BIDIRECTIONAL
+        )
+
+    def init_hidden(self): # initialize hidden states
+        h = zeros(self.num_layers * NUM_DIRS, BATCH_SIZE, HIDDEN_SIZE // NUM_DIRS) # hidden state
+        if self.rnn_type == "LSTM":
+            c = zeros(self.num_layers * NUM_DIRS, BATCH_SIZE, HIDDEN_SIZE // NUM_DIRS) # cell state
+            return (h, c)
+        return h
+
+    def forward(self, x, mask):
+        self.hidden = self.init_hidden()
+        x = nn.utils.rnn.pack_padded_sequence(x, mask, batch_first = True)
+        y, h = self.rnn(x, self.hidden)
+        y, _ = nn.utils.rnn.pad_packed_sequence(y, batch_first = True)
+        return y, h
+
 def Tensor(*args):
     x = torch.Tensor(*args)
     return x.cuda() if CUDA else x
 
 def LongTensor(*args):
     x = torch.LongTensor(*args)
+    return x.cuda() if CUDA else x
+
+def zeros(*args):
+    x = torch.zeros(*args)
     return x.cuda() if CUDA else x
 
 def argmax(x):
