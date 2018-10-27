@@ -20,8 +20,7 @@ def load_data():
         label = seq.pop()
         if len(batch_x) == 0: # the first line has the maximum sequence length
             batch_len = len(seq)
-        pad = [PAD_IDX] * (batch_len - len(seq))
-        batch_x.append(seq + pad)
+        batch_x.append([SOS_IDX] + seq + [EOS_IDX] + [PAD_IDX] * (batch_len - len(seq)))
         batch_y.append(label)
         if len(batch_x) == BATCH_SIZE:
             data.append((LongTensor(batch_x), LongTensor(batch_y))) # append a mini-batch

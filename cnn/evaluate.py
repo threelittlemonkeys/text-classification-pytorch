@@ -23,12 +23,12 @@ def run_model(model, idx_to_tag, data):
         data.append(["", [], ""])
     data.sort(key = lambda x: len(x[1]), reverse = True)
     batch_len = len(data[0][1])
-    batch = [x[1] + [PAD_IDX] * (batch_len - len(x[1])) for x in data]
+    batch = [[SOS_IDX] + x[1] + [EOS_IDX] + [PAD_IDX] * (batch_len - len(x[1])) for x in data]
     result = model(LongTensor(batch))
     for i in range(z):
         m = argmax(result[i])
         y1 = idx_to_tag[m]
-        p = scalar(torch.exp(result[i][m]))
+        p = torch.exp(result[i][m]).tolist()
         data[i].extend([y1, p])
         if VERBOSE:
             x = data[i][0]
@@ -43,8 +43,8 @@ def predict():
     fo = open(sys.argv[4])
     for line in fo:
         line, y0 = line.split("\t")
-        x = tokenize(line, "char")
-        x = [word_to_idx[i] for i in x if i in word_to_idx]
+        x = tokenize(line, UNIT)
+        x = [word_to_idx[i] if i in word_to_idx else UNK_IDX for i in x]
         y0 = y0.strip()
         data.append([line, x, y0])
         if len(data) == BATCH_SIZE:
