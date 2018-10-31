@@ -67,7 +67,7 @@ def evaluate(result):
         p[y1] += 1
         if y0 == y1:
             t[y0] += 1
-    for y in s.keys():
+    for y in sorted(s.keys()):
         prec = t[y] / p[y] if p[y] else 0
         rec = t[y] / s[y]
         a[0] += prec
