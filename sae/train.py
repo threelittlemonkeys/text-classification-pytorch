@@ -48,8 +48,7 @@ def train():
         for x, y in data:
             ii += 1
             model.zero_grad()
-            mask = x.data.eq(PAD_IDX).view(BATCH_SIZE, 1, 1, -1)
-            loss = F.nll_loss(model(x, mask), y)
+            loss = F.nll_loss(model(x), y)
             loss.backward()
             optim.step()
             loss = loss.tolist()

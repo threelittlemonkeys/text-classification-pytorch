@@ -22,8 +22,7 @@ def run_model(model, idx_to_tag, data):
     data.sort(key = lambda x: len(x[1]), reverse = True)
     batch_len = len(data[0][1])
     batch = LongTensor([x[1] + [PAD_IDX] * (batch_len - len(x[1])) for x in data])
-    mask = batch.data.eq(PAD_IDX).view(BATCH_SIZE, 1, 1, -1)
-    result = model(batch, mask)
+    result = model(batch)
     for i in range(z):
         m = argmax(result[i])
         y0 = data[i][2]

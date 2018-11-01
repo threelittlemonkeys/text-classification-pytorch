@@ -6,7 +6,7 @@ import torch.nn.functional as F
 UNIT = "char" # unit for tokenization (char, word)
 BATCH_SIZE = 128
 EMBED_SIZE = 300
-HIDDEN_SIZE = 1000
+HIDDEN_SIZE = 500
 DROPOUT = 0.5
 BIDIRECTIONAL = True
 NUM_DIRS = 2 if BIDIRECTIONAL else 1
@@ -120,7 +120,7 @@ class attn_mh(nn.Module): # multi-head attention
         c = np.sqrt(DK) # scale factor
         a = torch.matmul(q, k.transpose(2, 3)) / c # compatibility function
         a = a.masked_fill(mask, -10000) # masking in log space
-        a = self.Va = F.softmax(a, -1) # [B, NUM_HEADS, 1, L]
+        a = self.Va = F.softmax(a, 3) # [B, NUM_HEADS, 1, L]
         a = torch.matmul(a, v) # [B, NUM_HEADS, 1, DV]
         return a # attention weights
 

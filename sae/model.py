@@ -5,12 +5,9 @@ import torch.nn.functional as F
 
 UNIT = "char" # unit for tokenization (char, word)
 BATCH_SIZE = 128
-EMBED_SIZE = 128
-NUM_HEADS = 8 # number of heads
-DK = EMBED_SIZE // NUM_HEADS # dimension of key
-DV = EMBED_SIZE // NUM_HEADS # dimension of value
+EMBED_SIZE = 256
 DROPOUT = 0.5
-HIDDEN_SIZE = 1000
+HIDDEN_SIZE = 500
 BIDIRECTIONAL = True
 NUM_DIRS = 2 if BIDIRECTIONAL else 1
 VERBOSE = False
@@ -29,7 +26,7 @@ class sae(nn.Module): # self attentive encoder
     def __init__(self, vocab_size, num_labels):
         super().__init__()
         self.rnn_type = "LSTM"
-        self.num_layers = 2
+        self.num_layers = 1
 
         # architecture
         self.embed = nn.Embedding(vocab_size, EMBED_SIZE, padding_idx = PAD_IDX)
@@ -42,15 +39,14 @@ class sae(nn.Module): # self attentive encoder
         if CUDA:
             lself = self.cuda()
 
-    def forward(self, x, mask):
+    def forward(self, x):
+        mask = maskset(x)
+        # x = nn.Embedding(vocab_size, EMBED_SIZE, padding_idx = PAD_IDX)
         x = self.embed(x)
         h = x + self.pe(x.size(1))
         for layer in self.layers:
-            h = layer(h, mask)
-        h *= (1 - mask).view(BATCH_SIZE, -1, 1).float()
-        _, h = self.rnn(h, torch.sum((1 - mask).view(BATCH_SIZE, -1), 1))
-        h = h if self.rnn_type == "GRU" else h[-1]
-        h = torch.cat([x for x in h[-NUM_DIRS:]], 1) # final cell state
+            h = layer(h, mask[0])
+        h = self.rnn(h, mask)
         h = self.fc(h)
         y = self.softmax(h)
         return y
@@ -60,7 +56,7 @@ class enc_layer(nn.Module): # encoder layer
         super().__init__()
 
         # architecture
-        self.attn = attn_mh() # self-attention
+        self.attn = attn_mh(EMBED_SIZE) # self-attention
         self.ffn = ffn(2048)
 
     def forward(self, x, mask):
@@ -81,19 +77,23 @@ class pos_encoder(nn.Module): # positional encoding
         return self.pe[:n]
 
 class attn_mh(nn.Module): # multi-head attention
-    def __init__(self):
+    def __init__(self, dim):
         super().__init__()
+        self.D = dim # dimension of model
+        self.H = 8 # number of heads
+        self.Dk = self.D // self.H # dimension of key
+        self.Dv = self.D // self.H # dimension of value
 
         # architecture
-        self.Wq = nn.Linear(EMBED_SIZE, NUM_HEADS * DK) # query
-        self.Wk = nn.Linear(EMBED_SIZE, NUM_HEADS * DK) # key for attention distribution
-        self.Wv = nn.Linear(EMBED_SIZE, NUM_HEADS * DV) # value for context representation
-        self.Wo = nn.Linear(NUM_HEADS * DV, EMBED_SIZE)
+        self.Wq = nn.Linear(self.D, self.H * self.Dk) # query
+        self.Wk = nn.Linear(self.D, self.H * self.Dk) # key for attention distribution
+        self.Wv = nn.Linear(self.D, self.H * self.Dv) # value for context representation
+        self.Wo = nn.Linear(self.H * self.Dv, self.D)
         self.dropout = nn.Dropout(DROPOUT)
-        self.norm = nn.LayerNorm(EMBED_SIZE)
+        self.norm = nn.LayerNorm(self.D)
 
     def attn_sdp(self, q, k, v, mask): # scaled dot-product attention
-        c = np.sqrt(DK) # scale factor
+        c = np.sqrt(self.Dk) # scale factor
         a = torch.matmul(q, k.transpose(2, 3)) / c # compatibility function
         a = a.masked_fill(mask, -10000) # masking in log space
         a = F.softmax(a, -1)
@@ -102,24 +102,24 @@ class attn_mh(nn.Module): # multi-head attention
 
     def forward(self, q, k, v, mask):
         x = q # identity
-        q = self.Wq(q).view(BATCH_SIZE, -1, NUM_HEADS, DK).transpose(1, 2)
-        k = self.Wk(k).view(BATCH_SIZE, -1, NUM_HEADS, DK).transpose(1, 2)
-        v = self.Wv(v).view(BATCH_SIZE, -1, NUM_HEADS, DV).transpose(1, 2)
+        q = self.Wq(q).view(BATCH_SIZE, -1, self.H, self.Dk).transpose(1, 2)
+        k = self.Wk(k).view(BATCH_SIZE, -1, self.H, self.Dk).transpose(1, 2)
+        v = self.Wv(v).view(BATCH_SIZE, -1, self.H, self.Dv).transpose(1, 2)
         z = self.attn_sdp(q, k, v, mask)
-        z = z.transpose(1, 2).contiguous().view(BATCH_SIZE, -1, NUM_HEADS * DV)
+        z = z.transpose(1, 2).contiguous().view(BATCH_SIZE, -1, self.H * self.Dv)
         z = self.Wo(z)
         z = self.norm(x + self.dropout(z)) # residual connection and dropout
         return z
 
 class ffn(nn.Module): # position-wise feed-forward networks
-    def __init__(self, d):
+    def __init__(self, dim):
         super().__init__()
 
         # architecture
         self.layers = nn.Sequential(
-            nn.Linear(EMBED_SIZE, d),
+            nn.Linear(EMBED_SIZE, dim),
             nn.ReLU(),
-            nn.Linear(d, EMBED_SIZE),
+            nn.Linear(dim, EMBED_SIZE),
         )
         self.dropout = nn.Dropout(DROPOUT)
         self.norm = nn.LayerNorm(EMBED_SIZE)
@@ -143,6 +143,7 @@ class rnn(nn.Module):
             batch_first = True,
             bidirectional = BIDIRECTIONAL
         )
+        self.attn = attn_mh(HIDDEN_SIZE)
 
     def init_hidden(self): # initialize hidden states
         h = zeros(self.num_layers * NUM_DIRS, BATCH_SIZE, HIDDEN_SIZE // NUM_DIRS) # hidden state
@@ -153,10 +154,13 @@ class rnn(nn.Module):
 
     def forward(self, x, mask):
         self.hidden = self.init_hidden()
-        x = nn.utils.rnn.pack_padded_sequence(x, mask, batch_first = True)
-        y, h = self.rnn(x, self.hidden)
-        y, _ = nn.utils.rnn.pad_packed_sequence(y, batch_first = True)
-        return y, h
+        x = nn.utils.rnn.pack_padded_sequence(x, mask[1], batch_first = True)
+        ho, hc = self.rnn(x, self.hidden)
+        ho, _ = nn.utils.rnn.pad_packed_sequence(ho, batch_first = True)
+        hc = hc if self.rnn_type == "GRU" else hc[-1]
+        hc = torch.cat([x for x in hc[-NUM_DIRS:]], 1)
+        h = self.attn(hc, ho, ho, mask[0])
+        return hc
 
 def Tensor(*args):
     x = torch.Tensor(*args)
@@ -172,3 +176,7 @@ def zeros(*args):
 
 def argmax(x):
     return torch.max(x, 0)[1].tolist() # for 1D tensor
+
+def maskset(x):
+    mask = x.data.eq(PAD_IDX)
+    return (mask.view(BATCH_SIZE, 1, 1, -1), x.size(1) - mask.sum(1)) # set of mask and lengths
