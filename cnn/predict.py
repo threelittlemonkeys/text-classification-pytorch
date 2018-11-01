@@ -23,7 +23,7 @@ def run_model(model, idx_to_tag, data):
         data.append(["", []])
     data.sort(key = lambda x: len(x[1]), reverse = True)
     batch_len = len(data[0][1])
-    batch = [[SOS_IDX] + x + [PAD_IDX] * (batch_len - len(x)) + [EOS_IDX] for _, x in data]
+    batch = [[SOS_IDX] + x + [EOS_IDX] + [PAD_IDX] * (batch_len - len(x)) for _, x in data]
     result = model(LongTensor(batch))
     for i in range(z):
         m = argmax(result[i])
