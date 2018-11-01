@@ -3,9 +3,9 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-UNIT = "char" # unit for tokenization (char, word)
+UNIT = "word" # unit for tokenization (char, word)
 BATCH_SIZE = 128
-EMBED_SIZE = 256
+EMBED_SIZE = 512
 DROPOUT = 0.5
 HIDDEN_SIZE = 500
 BIDIRECTIONAL = True
