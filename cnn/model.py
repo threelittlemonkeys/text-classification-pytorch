@@ -59,6 +59,3 @@ class cnn(nn.Module):
 def LongTensor(*args):
     x = torch.LongTensor(*args)
     return x.cuda() if CUDA else x
-
-def argmax(x):
-    return torch.max(x, 0)[1].tolist() # for 1D tensor
