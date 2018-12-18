@@ -52,7 +52,6 @@ def predict():
             result = run_model(model, data, idx_to_word, idx_to_tag)
             for x in result:
                 print(x)
-            idx = 0
             data = []
         idx += 1
     fo.close()
