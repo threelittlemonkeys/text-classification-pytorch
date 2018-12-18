@@ -46,7 +46,6 @@ def predict(lb = False):
         data.append([idx, line, x, y])
         if len(data) == BATCH_SIZE:
             result.extend(run_model(model, idx_to_tag, data))
-            idx = 0
             data = []
         idx += 1
     fo.close()
