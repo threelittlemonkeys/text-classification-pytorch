@@ -68,7 +68,7 @@ def heatmap(m, x, idx_to_word):
         y.append([x for x in v[:len(x)]])
     return y
 
-def mat2csv(m, delim ="\t", n = 0):
+def mat2csv(m, delim ="\t", n = 6):
     k = 10 ** -n
     csv = delim.join([x for x in m[0]]) + "\n"
     for v in m[1:]:
