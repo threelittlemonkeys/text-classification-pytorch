@@ -61,7 +61,7 @@ def f1(p, r):
         return 2 * p * r / (p + r)
     return 0
 
-def heatmap(m, x, idx_to_word, delim = "\t"):
+def heatmap(m, x, idx_to_word):
     y = []
     y.append([idx_to_word[c] for c in x]) # input
     for v in m: # weights
