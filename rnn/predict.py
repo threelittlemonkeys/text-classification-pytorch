@@ -16,7 +16,6 @@ def load_model():
 
 def run_model(model, data, idx_to_word, idx_to_tag):
     pred = []
-    batch = []
     z = len(data)
     while len(data) < BATCH_SIZE:
         data.append([-1, "", [UNK_IDX]])
