@@ -15,7 +15,6 @@ def load_model():
 
 def run_model(model, idx_to_tag, data):
     pred = []
-    batch = []
     z = len(data)
     while len(data) < BATCH_SIZE:
         data.append(["", []])
