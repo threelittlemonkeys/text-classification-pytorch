@@ -35,7 +35,7 @@ def run_model(model, data, idx_to_word, idx_to_tag):
             y = enumerate(result[i].exp().tolist())
             for a, b in sorted(y, key = lambda x: x[1], reverse = True):
                 print(idx_to_tag[a], round(b, 4))
-            print(mat2csv(heatmap(Va[i], data[i][2], idx_to_word), n = 6))
+            print(mat2csv(heatmap(Va[i], data[i][2], idx_to_word)))
     return [(x[1], x[3]) for x in sorted(data[:z])]
 
 def predict():

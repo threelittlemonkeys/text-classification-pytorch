@@ -68,12 +68,12 @@ def heatmap(m, x, idx_to_word):
         y.append([x for x in v[:len(x)]])
     return y
 
-def mat2csv(m, delim ="\t", n = 6):
-    k = 10 ** -n
-    csv = delim.join([x for x in m[0]]) + "\n"
-    for v in m[1:]:
-        if n:
-            csv += delim.join([str(round(x, n)) if x > k else "0" for x in v]) + "\n"
-        else:
-            csv += delim.join([str(x) for x in v]) + "\n"
+def mat2csv(m, ch = True, rh = False, nd = 6, delim ="\t"):
+    f = "%%.%df" % nd
+    if ch: # column header
+        csv = delim.join([x for x in m[0]]) + "\n" # source sequence
+    for row in m[ch:]:
+        if rh: # row header
+            csv += row[0] + delim # target sequence
+        csv += delim.join([f % x for x in row[rh:]]) + "\n"
     return csv
