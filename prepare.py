@@ -1,10 +1,7 @@
 import sys
 import re
-from model import UNIT, PAD, SOS, EOS, UNK, PAD_IDX, SOS_IDX, EOS_IDX, UNK_IDX
-from utils import tokenize
-
-MIN_LEN = 1 # >= KERNEL_SIZES
-MAX_LEN = 50
+from model import *
+from utils import *
 
 def load_data():
     data = []
