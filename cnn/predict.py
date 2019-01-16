@@ -17,7 +17,7 @@ def run_model(model, idx_to_tag, data):
     z = len(data)
     while len(data) < BATCH_SIZE:
         data.append([-1, "", [], ""])
-    data.sort(key = lambda x: len(x[2]), reverse = True)
+    data.sort(key = lambda x: -len(x[2]))
     batch_len = max(len(data[0][2]), max(KERNEL_SIZES))
     batch = [[SOS_IDX] + x[2] + [EOS_IDX] + [PAD_IDX] * (batch_len - len(x[2])) for x in data]
     result = model(LongTensor(batch))
@@ -27,7 +27,7 @@ def run_model(model, idx_to_tag, data):
             print()
             print(data[i])
             y = torch.exp(result[i]).tolist()
-            for j, p in sorted(enumerate(y), key = lambda x: x[1], reverse = True):
+            for j, p in sorted(enumerate(y), key = lambda x: -x[1]):
                 print("%s %.6f" % (idx_to_tag[j], p))
     return [x[1:] for x in sorted(data[:z])]
 
