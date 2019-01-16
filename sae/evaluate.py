@@ -18,7 +18,7 @@ def run_model(model, idx_to_tag, data):
     z = len(data)
     while len(data) < BATCH_SIZE:
         data.append(["", [UNK_IDX], ""])
-    data.sort(key = lambda x: len(x[1]), reverse = True)
+    data.sort(key = lambda x: -len(x[1]))
     batch_len = len(data[0][1])
     batch = LongTensor([x[1] + [PAD_IDX] * (batch_len - len(x[1])) for x in data])
     result = model(batch)

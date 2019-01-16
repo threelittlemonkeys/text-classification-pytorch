@@ -19,7 +19,7 @@ def run_model(model, data, idx_to_word, idx_to_tag):
     z = len(data)
     while len(data) < BATCH_SIZE:
         data.append([-1, "", [UNK_IDX]])
-    data.sort(key = lambda x: len(x[2]), reverse = True)
+    data.sort(key = lambda x: -len(x[2]))
     batch_len = len(data[0][2])
     batch = LongTensor([x[2] + [PAD_IDX] * (batch_len - len(x[2])) for x in data])
     mask = maskset(batch)
@@ -32,7 +32,7 @@ def run_model(model, data, idx_to_word, idx_to_tag):
         if VERBOSE:
             print(data[i][1])
             y = enumerate(result[i].exp().tolist())
-            for a, b in sorted(y, key = lambda x: x[1], reverse = True):
+            for a, b in sorted(y, key = lambda x: -x[1]):
                 print(idx_to_tag[a], round(b, 4))
             print(mat2csv(heatmap(Va[i], data[i][2], idx_to_word))) # attention heatmap
     return [(x[1], x[3]) for x in sorted(data[:z])]
