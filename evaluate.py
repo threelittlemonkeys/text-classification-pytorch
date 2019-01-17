@@ -6,8 +6,7 @@ def evaluate(result):
     s = defaultdict(int) # entire set
     p = defaultdict(int) # positive
     t = defaultdict(int) # true positive
-    for x in result:
-        y0, y1 = x[1:] # actual value, predicted outcome
+    for _, y0, y1 in result: # actual value, predicted outcome
         s[y0] += 1
         p[y1] += 1
         if y0 == y1:

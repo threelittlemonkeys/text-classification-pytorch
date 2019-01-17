@@ -34,8 +34,6 @@ def run_model(model, idx_to_word, idx_to_tag, data):
             for a, b in sorted(y, key = lambda x: -x[1]):
                 print(idx_to_tag[a], round(b, 4))
             print(mat2csv(heatmap(Va[i], data[i][2], idx_to_word))) # attention heatmap
-    for x in [x[1:] for x in sorted(data[:z])]:
-        print(x)
     return [(x[1], *x[3:]) for x in sorted(data[:z])]
 
 def predict(lb = False):
