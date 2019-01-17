@@ -22,14 +22,14 @@ def run_model(model, idx_to_tag, data):
     batch = [[SOS_IDX] + x[2] + [EOS_IDX] + [PAD_IDX] * (batch_len - len(x[2])) for x in data]
     result = model(LongTensor(batch))
     for i in range(z):
-        data[i] = (data[i][0], data[i][1], data[i][3], idx_to_tag[result[i].argmax()])
+        data[i].append(idx_to_tag[result[i].argmax()])
         if VERBOSE:
             print()
             print(data[i])
             y = torch.exp(result[i]).tolist()
             for j, p in sorted(enumerate(y), key = lambda x: -x[1]):
                 print("%s %.6f" % (idx_to_tag[j], p))
-    return [x[1:] for x in sorted(data[:z])]
+    return [(x[1], *x[3:]) for x in sorted(data[:z])]
 
 def predict(lb = False):
     idx = 0

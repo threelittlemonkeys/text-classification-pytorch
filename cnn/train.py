@@ -19,7 +19,7 @@ def load_data():
         seq = [int(i) for i in line.split(" ")]
         label = seq.pop()
         if len(batch_x) == 0: # the first line has the maximum sequence length
-            batch_len = len(seq)
+            batch_len = max(len(seq), max(KERNEL_SIZES))
         batch_x.append([SOS_IDX] + seq + [EOS_IDX] + [PAD_IDX] * (batch_len - len(seq)))
         batch_y.append(label)
         if len(batch_x) == BATCH_SIZE:
