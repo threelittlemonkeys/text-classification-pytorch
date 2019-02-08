@@ -13,6 +13,7 @@ NUM_DIRS = 2 if BIDIRECTIONAL else 1
 NUM_HEADS = 8
 DK = HIDDEN_SIZE // NUM_HEADS # dimension of key
 DV = HIDDEN_SIZE // NUM_HEADS # dimension of value
+LEARNING_RATE = 1e-4
 VERBOSE = False
 SAVE_EVERY = 10
 
