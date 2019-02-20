@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-UNIT = "word" # unit for tokenization (char, word)
+UNIT = "word" # unit of tokenization (char, word)
 MIN_LEN = 1 # >= KERNEL_SIZES
 MAX_LEN = 50
 BATCH_SIZE = 64

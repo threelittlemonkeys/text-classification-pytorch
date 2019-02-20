@@ -3,7 +3,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-UNIT = "char" # unit for tokenization (char, word)
+UNIT = "char" # unit of tokenization (char, word)
 BATCH_SIZE = 128
 EMBED_SIZE = 300
 HIDDEN_SIZE = 500
