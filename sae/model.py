@@ -32,7 +32,7 @@ class sae(nn.Module): # self attentive encoder
         self.embed = nn.Embedding(vocab_size, EMBED_SIZE, padding_idx = PAD_IDX)
         self.pe = pos_encoder() # positional encoding
         self.layers = nn.ModuleList([enc_layer() for _ in range(self.num_layers)])
-        self.rnn = rnn("LSTM", vocab_size, num_labels)
+        self.rnn = rnn(self.rnn_type, vocab_size, num_labels)
         self.fc = nn.Linear(HIDDEN_SIZE, num_labels)
         self.softmax = nn.LogSoftmax(1)
 
