@@ -2,28 +2,36 @@ from predict import *
 from collections import defaultdict
 
 def evaluate(result):
-    a = [0, 0] # average precision, recall
-    s = defaultdict(int) # entire set
-    p = defaultdict(int) # positive
-    t = defaultdict(int) # true positive
-    for _, y0, y1 in result: # actual value, predicted outcome
-        s[y0] += 1
-        p[y1] += 1
-        if y0 == y1:
-            t[y0] += 1
-    for y in sorted(s.keys()):
-        prec = t[y] / p[y] if p[y] else 0
-        rec = t[y] / s[y]
-        a[0] += prec
-        a[1] += rec
-        print("\nlabel = %s" % y)
-        print("precision = %f (%d/%d)" % (prec, t[y], p[y]))
-        print("recall = %f (%d/%d)" % (rec, t[y], s[y]))
-        print("f1 = %f" % f1(prec, rec))
-    a = [x / len(s) for x in a]
-    print("\nprecision = %f" % a[0])
-    print("recall = %f" % a[1])
-    print("f1 = %f" % f1(*a))
+    avg = defaultdict(float) # average
+    tp = defaultdict(int) # true positives
+    tpfn = defaultdict(int) # true positives + false negatives
+    tpfp = defaultdict(int) # true positives + false positives
+    for _, y0, y1 in result: # actual value, prediction
+        tp[y0] += y0 == y1
+        tpfn[y0] += 1
+        tpfp[y1] += 1
+    for y in sorted(tpfn.keys()):
+        pr = tp[y] / tpfp[y] if tpfp[y] else 0
+        rc = tp[y] / tpfn[y] if tpfn[y] else 0
+        avg["macro_pr"] += pr
+        avg["macro_rc"] += rc
+        print()
+        print("label = %s" % y)
+        print("precision = %f (%d/%d)" % (pr, tp[y], tpfp[y]))
+        print("recall = %f (%d/%d)" % (rc, tp[y], tpfn[y]))
+        print("f1 = %f" % f1(pr, rc))
+    avg["macro_pr"] /= len(tpfn)
+    avg["macro_rc"] /= len(tpfn)
+    avg["micro_pr"] = sum(tp.values()) / sum(tpfp.values())
+    avg["micro_rc"] = sum(tp.values()) / sum(tpfn.values())
+    print()
+    print("macro precision = %f" % avg["macro_pr"])
+    print("macro recall = %f" % avg["macro_rc"])
+    print("macro f1 = %f" % f1(avg["macro_pr"], avg["macro_rc"]))
+    print()
+    print("micro precision = %f" % avg["micro_pr"])
+    print("micro recall = %f" % avg["micro_rc"])
+    print("micro f1 = %f" % f1(avg["micro_pr"], avg["micro_rc"]))
 
 if __name__ == "__main__":
     if len(sys.argv) != 5:
