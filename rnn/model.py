@@ -4,12 +4,12 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 UNIT = "char" # unit of tokenization (char, word)
+RNN_TYPE = "LSTM"
+NUM_DIRS = 2 # unidirectional: 1, bidirectional: 2
 BATCH_SIZE = 128
 EMBED_SIZE = 300
 HIDDEN_SIZE = 500
 DROPOUT = 0.5
-BIDIRECTIONAL = True
-NUM_DIRS = 2 if BIDIRECTIONAL else 1
 NUM_HEADS = 8
 DK = HIDDEN_SIZE // NUM_HEADS # dimension of key
 DV = HIDDEN_SIZE // NUM_HEADS # dimension of value
@@ -31,23 +31,22 @@ torch.manual_seed(1)
 CUDA = torch.cuda.is_available()
 
 class rnn(nn.Module):
-    def __init__(self, rnn_type, vocab_size, num_labels):
+    def __init__(self, vocab_size, num_labels):
         super().__init__()
-        self.rnn_type = rnn_type
 
         # architecture
         self.embed = nn.Embedding(vocab_size, EMBED_SIZE, padding_idx = PAD_IDX)
-        self.rnn1 = getattr(nn, rnn_type)(
+        self.rnn1 = getattr(nn, RNN_TYPE)(
             input_size = EMBED_SIZE,
             hidden_size = HIDDEN_SIZE // NUM_DIRS,
             batch_first = True,
-            bidirectional = BIDIRECTIONAL
+            bidirectional = NUM_DIRS == 2
         )
-        self.rnn2 = getattr(nn, rnn_type)(
+        self.rnn2 = getattr(nn, RNN_TYPE)(
             input_size = HIDDEN_SIZE,
             hidden_size = HIDDEN_SIZE // NUM_DIRS,
             batch_first = True,
-            bidirectional = BIDIRECTIONAL
+            bidirectional = NUM_DIRS == 2
         )
         # self.attn = attn(HIDDEN_SIZE)
         # self.attn = attn(EMBED_SIZE + HIDDEN_SIZE * 2)
@@ -60,7 +59,7 @@ class rnn(nn.Module):
 
     def init_hidden(self): # initialize hidden states
         h = zeros(NUM_DIRS, BATCH_SIZE, HIDDEN_SIZE // NUM_DIRS) # hidden state
-        if self.rnn_type == "LSTM":
+        if RNN_TYPE == "LSTM":
             c = zeros(NUM_DIRS, BATCH_SIZE, HIDDEN_SIZE // NUM_DIRS) # cell state
             return (h, c)
         return h
@@ -72,7 +71,7 @@ class rnn(nn.Module):
         h = nn.utils.rnn.pack_padded_sequence(x, mask[1], batch_first = True)
         h1, self.hidden1 = self.rnn1(h, self.hidden1)
         h2, self.hidden2 = self.rnn2(h1, self.hidden2)
-        h = self.hidden2 if self.rnn_type == "GRU" else self.hidden2[-1]
+        h = self.hidden2 if RNN_TYPE == "GRU" else self.hidden2[-1]
         h = torch.cat([x for x in h[-NUM_DIRS:]], 1) # final cell state
         if self.attn:
             h1, _ = nn.utils.rnn.pad_packed_sequence(h1, batch_first = True)
