@@ -1,6 +1,6 @@
 # Text Classification in PyTorch
 
-Minimal implementations of text classification models in Python and PyTorch.
+Minimal implementations of text classification models in PyTorch.
 
 - Rule-based classification
 - Convolutional Neural Networks (CNNs)
