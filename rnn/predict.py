@@ -14,7 +14,7 @@ def load_model():
     load_checkpoint(sys.argv[1], model)
     return model, word_to_idx, tag_to_idx, idx_to_word, idx_to_tag
 
-def run_model(model, idx_to_word, idx_to_tag, batch):
+def run(model, idx_to_word, idx_to_tag, batch):
     batch_size = len(batch) # real batch size
     while len(batch) < BATCH_SIZE:
         batch.append([-1, "", [UNK_IDX], ""])
@@ -26,20 +26,21 @@ def run_model(model, idx_to_word, idx_to_tag, batch):
         Va = model.attn.Va.squeeze(2).tolist() # attention weights
     for i in range(batch_size):
         y = idx_to_tag[argmax(result[i])]
+        p = round(max(result[i]).exp().item(), NUM_DIGITS)
         batch[i].append(y)
+        batch[i].append(p)
         if VERBOSE:
             print(batch[i][1])
             y = enumerate(result[i].exp().tolist())
             for a, b in sorted(y, key = lambda x: -x[1]):
-                print(idx_to_tag[a], round(b, 4))
+                print(idx_to_tag[a], round(b, NUM_DIGITS))
             print(mat2csv(heatmap(Va[i], batch[i][2], idx_to_word))) # attention heatmap
     return [(x[1], *x[3:]) for x in sorted(batch[:batch_size])]
 
-def predict(lb = False):
+def predict(filename, lb, model, word_to_idx, tag_to_idx, idx_to_word, idx_to_tag):
     data = []
     result = []
-    model, word_to_idx, tag_to_idx, idx_to_word, idx_to_tag = load_model()
-    fo = open(sys.argv[4])
+    fo = open(filename)
     for idx, line in enumerate(fo):
         line = line.strip()
         line, y = line.split("\t") if lb else [line, ""]
@@ -49,15 +50,15 @@ def predict(lb = False):
     fo.close()
     for i in range(0, len(data), BATCH_SIZE):
         batch = data[i:i + BATCH_SIZE]
-        result.extend(run_model(model, idx_to_word, idx_to_tag, batch))
-    if lb:
-        return result
-    for x, _, y in result:
-        print((x, y))
+        result.extend(run(model, idx_to_word, idx_to_tag, batch))
+    return result
 
 if __name__ == "__main__":
     if len(sys.argv) != 5:
         sys.exit("Usage: %s model word_to_idx tag_to_idx test_data" % sys.argv[0])
     print("cuda: %s" % CUDA)
     with torch.no_grad():
-        predict()
+        result = predict(sys.argv[4], False, *load_model())
+        print()
+        for x, _, y, p in result:
+            print((x, y, p))

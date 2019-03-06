@@ -3,6 +3,7 @@ import re
 import time
 from model import *
 from utils import *
+from evaluate import *
 from os.path import isfile
 
 def load_data():
@@ -33,7 +34,7 @@ def load_data():
     return data, word_to_idx, tag_to_idx
 
 def train():
-    num_epochs = int(sys.argv[5])
+    num_epochs = int(sys.argv[-1])
     data, word_to_idx, tag_to_idx = load_data()
     model = rnn(len(word_to_idx), len(tag_to_idx))
     print(model)
@@ -61,9 +62,10 @@ def train():
             save_checkpoint("", None, ei, loss_sum, timer)
         else:
             save_checkpoint(filename, model, ei, loss_sum, timer)
-
+        if EVAL_EVERY and (ei % EVAL_EVERY == 0 or ei == epoch + num_epochs):
+            evaluate(predict(sys.argv[5], True))
 if __name__ == "__main__":
-    if len(sys.argv) != 6:
-        sys.exit("Usage: %s model word_to_idx tag_to_idx training_data num_epoch" % sys.argv[0])
+    if len(sys.argv) not in [6, 7]:
+        sys.exit("Usage: %s model word_to_idx tag_to_idx training_data (validation_data) num_epoch" % sys.argv[0])
     print("cuda: %s" % CUDA)
     train()

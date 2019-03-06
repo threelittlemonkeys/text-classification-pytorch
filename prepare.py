@@ -22,12 +22,6 @@ def load_data():
     fo.close()
     return data, word_to_idx, tag_to_idx
 
-def save_data(data):
-    fo = open(sys.argv[1] + ".csv", "w")
-    for seq in data:
-        fo.write(" ".join(seq) + "\n")
-    fo.close()
-
 def save_word_to_idx(word_to_idx):
     fo = open(sys.argv[1] + ".word_to_idx", "w")
     for word, _ in sorted(word_to_idx.items(), key = lambda x: x[1]):

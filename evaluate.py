@@ -6,7 +6,7 @@ def evaluate(result):
     tp = defaultdict(int) # true positives
     tpfn = defaultdict(int) # true positives + false negatives
     tpfp = defaultdict(int) # true positives + false positives
-    for _, y0, y1 in result: # actual value, prediction
+    for _, y0, y1, _ in result: # actual value, prediction
         tp[y0] += y0 == y1
         tpfn[y0] += 1
         tpfp[y1] += 1
@@ -38,4 +38,4 @@ if __name__ == "__main__":
         sys.exit("Usage: %s model word_to_idx tag_to_idx test_data" % sys.argv[0])
     print("cuda: %s" % CUDA)
     with torch.no_grad():
-        evaluate(predict(True))
+        evaluate(predict(sys.argv[4], True, *load_model()))

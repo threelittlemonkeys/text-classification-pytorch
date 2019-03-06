@@ -1,6 +1,8 @@
 import re
 from model import *
 
+NUM_DIGITS = 4
+
 def normalize(x):
     # x = re.sub("[^ a-zA-Z0-9\uAC00-\uD7A3]+", " ", x)
     x = re.sub("\s+", " ", x)
@@ -16,25 +18,37 @@ def tokenize(x, unit):
     if unit == "word":
         return x.split(" ")
 
-def load_tag_to_idx(filename):
-    print("loading tag_to_idx...")
-    tag_to_idx = {}
-    fo = open(filename)
-    for line in fo:
-        line = line.strip()
-        tag_to_idx[line] = len(tag_to_idx)
+def save_data(filename, data):
+    fo = open(filename, "w")
+    for seq in data:
+        fo.write(" ".join(seq) + "\n")
     fo.close()
-    return tag_to_idx
 
-def load_word_to_idx(filename):
-    print("loading word_to_idx...")
-    word_to_idx = {}
+def load_tkn_to_idx(filename):
+    print("loading %s" % filename)
+    tkn_to_idx = {}
     fo = open(filename)
     for line in fo:
         line = line.strip()
-        word_to_idx[line] = len(word_to_idx)
+        tkn_to_idx[line] = len(tkn_to_idx)
     fo.close()
-    return word_to_idx
+    return tkn_to_idx
+
+def load_idx_to_tkn(filename):
+    print("loading %s" % filename)
+    idx_to_tkn = []
+    fo = open(filename)
+    for line in fo:
+        line = line.strip()
+        idx_to_tkn.append(line)
+    fo.close()
+    return idx_to_tkn
+
+def save_tkn_to_idx(filename, tkn_to_idx):
+    fo = open(filename, "w")
+    for tkn, _ in sorted(tkn_to_idx.items(), key = lambda x: x[1]):
+        fo.write("%s\n" % tkn)
+    fo.close()
 
 def load_checkpoint(filename, model = None):
     print("loading model...")
@@ -56,11 +70,6 @@ def save_checkpoint(filename, model, epoch, loss, time):
         torch.save(checkpoint, filename + ".epoch%d" % epoch)
         print("saved model at epoch %d" % epoch)
 
-def f1(p, r):
-    if p + r:
-        return 2 * p * r / (p + r)
-    return 0
-
 def heatmap(m, x, idx_to_word):
     y = []
     y.append([idx_to_word[c] for c in x]) # input
@@ -68,7 +77,7 @@ def heatmap(m, x, idx_to_word):
         y.append([x for x in v[:len(x)]])
     return y
 
-def mat2csv(m, ch = True, rh = False, nd = 4, delim ="\t"):
+def mat2csv(m, ch = True, rh = False, nd = NUM_DIGITS, delim ="\t"):
     f = "%%.%df" % nd
     if ch: # column header
         csv = delim.join([x for x in m[0]]) + "\n" # source sequence
@@ -77,3 +86,8 @@ def mat2csv(m, ch = True, rh = False, nd = 4, delim ="\t"):
             csv += row[0] + delim # target sequence
         csv += delim.join([f % x for x in row[rh:]]) + "\n"
     return csv
+
+def f1(p, r):
+    if p + r:
+        return 2 * p * r / (p + r)
+    return 0
