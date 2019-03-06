@@ -15,6 +15,7 @@ DK = HIDDEN_SIZE // NUM_HEADS # dimension of key
 DV = HIDDEN_SIZE // NUM_HEADS # dimension of value
 LEARNING_RATE = 1e-4
 VERBOSE = False
+EVAL_EVERY = 10
 SAVE_EVERY = 10
 
 PAD = "<PAD>" # padding
@@ -48,9 +49,9 @@ class rnn(nn.Module):
             batch_first = True,
             bidirectional = NUM_DIRS == 2
         )
-        # self.attn = attn(HIDDEN_SIZE)
+        self.attn = attn(HIDDEN_SIZE)
         # self.attn = attn(EMBED_SIZE + HIDDEN_SIZE * 2)
-        self.attn = attn_mh()
+        # self.attn = attn_mh()
         self.fc = nn.Linear(HIDDEN_SIZE, num_labels)
         self.softmax = nn.LogSoftmax(1)
 
@@ -68,8 +69,8 @@ class rnn(nn.Module):
         self.hidden1 = self.init_hidden()
         self.hidden2 = self.init_hidden()
         x = self.embed(x)
-        h = nn.utils.rnn.pack_padded_sequence(x, mask[1], batch_first = True)
-        h1, self.hidden1 = self.rnn1(h, self.hidden1)
+        x = nn.utils.rnn.pack_padded_sequence(x, mask[1], batch_first = True)
+        h1, self.hidden1 = self.rnn1(x, self.hidden1)
         h2, self.hidden2 = self.rnn2(h1, self.hidden2)
         h = self.hidden2 if RNN_TYPE == "GRU" else self.hidden2[-1]
         h = torch.cat([x for x in h[-NUM_DIRS:]], 1) # final cell state
@@ -77,10 +78,10 @@ class rnn(nn.Module):
             h1, _ = nn.utils.rnn.pad_packed_sequence(h1, batch_first = True)
             h2, _ = nn.utils.rnn.pad_packed_sequence(h2, batch_first = True)
             # global attention
-            # h = self.attn(h, h2, mask[0])
+            h = self.attn(h, h2, mask[0])
             # h = self.attn(h, torch.cat((x, h1, h2), 2), mask[0])
             # multi-head attention
-            h = self.attn(h, h2, h2, mask[0].view(BATCH_SIZE, 1, 1, -1))
+            # h = self.attn(h, h2, h2, mask[0].view(BATCH_SIZE, 1, 1, -1))
         h = self.fc(h)
         y = self.softmax(h)
         return y

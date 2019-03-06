@@ -12,9 +12,6 @@ def load_data():
         x, y = line.split("\t")
         x = tokenize(x, UNIT)
         y = y.strip()
-        if len(x) < MIN_LEN:
-            continue
-        x = x[:MAX_LEN]
         for w in x:
             if w not in word_to_idx:
                 word_to_idx[w] = len(word_to_idx)
