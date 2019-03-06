@@ -12,8 +12,10 @@ def load_data():
     batch_y = []
     batch_len = 0 # maximum sequence length of a mini-batch
     print("loading data...")
-    word_to_idx = load_word_to_idx(sys.argv[2])
-    tag_to_idx = load_tag_to_idx(sys.argv[3])
+    word_to_idx = load_tkn_to_idx(sys.argv[2])
+    tag_to_idx = load_tkn_to_idx(sys.argv[3])
+    idx_to_word = load_idx_to_tkn(sys.argv[2])
+    idx_to_tag = load_idx_to_tkn(sys.argv[3])
     fo = open(sys.argv[4], "r")
     for line in fo:
         line = line.strip()
@@ -31,11 +33,11 @@ def load_data():
     fo.close()
     print("data size: %d" % (len(data) * BATCH_SIZE))
     print("batch size: %d" % BATCH_SIZE)
-    return data, word_to_idx, tag_to_idx
+    return data, word_to_idx, tag_to_idx, idx_to_word, idx_to_tag
 
 def train():
     num_epochs = int(sys.argv[-1])
-    data, word_to_idx, tag_to_idx = load_data()
+    data, word_to_idx, tag_to_idx, idx_to_word, idx_to_tag = load_data()
     model = rnn(len(word_to_idx), len(tag_to_idx))
     print(model)
     optim = torch.optim.Adam(model.parameters(), lr = LEARNING_RATE)
@@ -63,7 +65,9 @@ def train():
         else:
             save_checkpoint(filename, model, ei, loss_sum, timer)
         if EVAL_EVERY and (ei % EVAL_EVERY == 0 or ei == epoch + num_epochs):
-            evaluate(predict(sys.argv[5], True))
+            args = [model, word_to_idx, tag_to_idx, idx_to_word, idx_to_tag]
+            evaluate(predict(sys.argv[5], True, *args), True)
+            print()
 if __name__ == "__main__":
     if len(sys.argv) not in [6, 7]:
         sys.exit("Usage: %s model word_to_idx tag_to_idx training_data (validation_data) num_epoch" % sys.argv[0])

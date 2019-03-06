@@ -4,10 +4,10 @@ from model import *
 from utils import *
 
 def load_model():
-    word_to_idx = load_word_to_idx(sys.argv[2])
+    word_to_idx = load_tkn_to_idx(sys.argv[2])
     tag_to_idx = load_tag_to_idx(sys.argv[3])
-    idx_to_word = [x for x, _ in sorted(word_to_idx.items(), key = lambda x: x[1])]
-    idx_to_tag = [x for x, _ in sorted(tag_to_idx.items(), key = lambda x: x[1])]
+    idx_to_word = load_idx_to_tkn(sys.argv[2])
+    idx_to_tag = load_idx_to_tkn(sys.argv[3])
     model = rnn(len(word_to_idx), len(tag_to_idx))
     print(model)
     model.eval()

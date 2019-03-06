@@ -22,22 +22,10 @@ def load_data():
     fo.close()
     return data, word_to_idx, tag_to_idx
 
-def save_word_to_idx(word_to_idx):
-    fo = open(sys.argv[1] + ".word_to_idx", "w")
-    for word, _ in sorted(word_to_idx.items(), key = lambda x: x[1]):
-        fo.write(word + "\n")
-    fo.close()
-
-def save_tag_to_idx(tag_to_idx):
-    fo = open(sys.argv[1] + ".tag_to_idx", "w")
-    for label, _ in sorted(tag_to_idx.items(), key = lambda x: x[1]):
-        fo.write(label + "\n")
-    fo.close()
-
 if __name__ == "__main__":
     if len(sys.argv) != 2:
         sys.exit("Usage: %s training_data" % sys.argv[0])
     data, word_to_idx, tag_to_idx = load_data()
-    save_data(data)
-    save_word_to_idx(word_to_idx)
-    save_tag_to_idx(tag_to_idx)
+    save_data(sys.argv[1] + ".csv", data)
+    save_tkn_to_idx(sys.argv[1] + ".word_to_idx", word_to_idx)
+    save_tkn_to_idx(sys.argv[1] + ".tag_to_idx", tag_to_idx)
