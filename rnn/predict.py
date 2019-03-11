@@ -6,8 +6,8 @@ from utils import *
 def load_model():
     word_to_idx = load_tkn_to_idx(sys.argv[2])
     tag_to_idx = load_tkn_to_idx(sys.argv[3])
-    idx_to_word = load_idx_to_tkn(sys.argv[2])
-    idx_to_tag = load_idx_to_tkn(sys.argv[3])
+    idx_to_word = idx_to_tkn(word_to_idx)
+    idx_to_tag = idx_to_tkn(tag_to_idx)
     model = rnn(len(word_to_idx), len(tag_to_idx))
     print(model)
     model.eval()
@@ -50,8 +50,8 @@ def predict(filename, lb, model, word_to_idx, tag_to_idx, idx_to_word, idx_to_ta
     fo.close()
     for i in range(0, len(data), BATCH_SIZE):
         batch = data[i:i + BATCH_SIZE]
-        result.extend(run(model, idx_to_word, idx_to_tag, batch))
-    return result
+        for y in run(model, idx_to_word, idx_to_tag, batch):
+            yield y
 
 if __name__ == "__main__":
     if len(sys.argv) != 5:
