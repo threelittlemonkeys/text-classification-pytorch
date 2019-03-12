@@ -15,11 +15,11 @@ def load_model():
     return model, word_to_idx, tag_to_idx, idx_to_word, idx_to_tag
 
 def run_model(model, idx_to_word, idx_to_tag, batch):
-    batch_len = len(batch[0][2])
     batch_size = len(batch) # real batch size
     while len(batch) < BATCH_SIZE:
         batch.append([-1, "", [UNK_IDX], ""])
     batch.sort(key = lambda x: -len(x[2]))
+    batch_len = len(batch[0][2])
     x = LongTensor([x[2] + [PAD_IDX] * (batch_len - len(x[2])) for x in batch])
     result = model(x, maskset(x))
     if VERBOSE:
