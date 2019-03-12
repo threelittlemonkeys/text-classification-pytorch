@@ -14,7 +14,7 @@ def load_model():
     load_checkpoint(sys.argv[1], model)
     return model, word_to_idx, tag_to_idx, idx_to_word, idx_to_tag
 
-def run(model, idx_to_word, idx_to_tag, batch):
+def run_model(model, idx_to_word, idx_to_tag, batch):
     batch_size = len(batch) # real batch size
     while len(batch) < BATCH_SIZE:
         batch.append([-1, "", [UNK_IDX], ""])
@@ -50,7 +50,7 @@ def predict(filename, lb, model, word_to_idx, tag_to_idx, idx_to_word, idx_to_ta
     fo.close()
     for i in range(0, len(data), BATCH_SIZE):
         batch = data[i:i + BATCH_SIZE]
-        for y in run(model, idx_to_word, idx_to_tag, batch):
+        for y in run_model(model, idx_to_word, idx_to_tag, batch):
             yield y
 
 if __name__ == "__main__":
