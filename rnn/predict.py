@@ -39,7 +39,6 @@ def run_model(model, idx_to_word, idx_to_tag, batch):
 
 def predict(filename, lb, model, word_to_idx, tag_to_idx, idx_to_word, idx_to_tag):
     data = []
-    result = []
     fo = open(filename)
     for idx, line in enumerate(fo):
         line = line.strip()
