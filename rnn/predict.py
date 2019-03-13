@@ -25,7 +25,7 @@ def run_model(model, idx_to_word, idx_to_tag, batch):
     if VERBOSE:
         Va = model.attn.Va.squeeze(2).tolist() # attention weights
     for i in range(batch_size):
-        y = idx_to_tag[argmax(result[i])]
+        y = idx_to_tag[result[i].argmax()]
         p = round(max(result[i]).exp().item(), NUM_DIGITS)
         batch[i].append(y)
         batch[i].append(p)
