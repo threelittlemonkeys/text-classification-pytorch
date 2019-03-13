@@ -18,6 +18,9 @@ def tokenize(x, unit):
     if unit == "word":
         return x.split(" ")
 
+def idx_to_tkn(tkn_to_idx):
+    return [x for x, _ in sorted(tkn_to_idx.items(), key = lambda x: x[1])]
+
 def save_data(filename, data):
     fo = open(filename, "w")
     for seq in data:
