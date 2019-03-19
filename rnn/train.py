@@ -14,8 +14,8 @@ def load_data():
     print("loading data...")
     word_to_idx = load_tkn_to_idx(sys.argv[2])
     tag_to_idx = load_tkn_to_idx(sys.argv[3])
-    idx_to_word = load_idx_to_tkn(sys.argv[2])
-    idx_to_tag = load_idx_to_tkn(sys.argv[3])
+    idx_to_word = idx_to_tkn(word_to_idx)
+    idx_to_tag = idx_to_tkn(tag_to_idx)
     fo = open(sys.argv[4], "r")
     for line in fo:
         line = line.strip()
