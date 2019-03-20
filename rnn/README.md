@@ -23,7 +23,7 @@ python prepare.py training_data
 
 To train:
 ```
-python train.py model word_to_idx tag_to_idx training_data.csv (validation_data) num_epoch
+python train.py model word_to_idx tag_to_idx training_data.tsv (validation_data) num_epoch
 ```
 
 To predict:

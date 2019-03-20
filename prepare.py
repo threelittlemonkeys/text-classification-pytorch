@@ -26,6 +26,6 @@ if __name__ == "__main__":
     if len(sys.argv) != 2:
         sys.exit("Usage: %s training_data" % sys.argv[0])
     data, word_to_idx, tag_to_idx = load_data()
-    save_data(sys.argv[1] + ".csv", data)
+    save_data(sys.argv[1] + ".tsv", data)
     save_tkn_to_idx(sys.argv[1] + ".word_to_idx", word_to_idx)
     save_tkn_to_idx(sys.argv[1] + ".tag_to_idx", tag_to_idx)

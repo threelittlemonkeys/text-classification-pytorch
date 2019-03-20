@@ -80,15 +80,15 @@ def heatmap(m, x, idx_to_word):
         y.append([x for x in v[:len(x)]])
     return y
 
-def mat2csv(m, ch = True, rh = False, nd = NUM_DIGITS, delim ="\t"):
+def mat2tsv(m, ch = True, rh = False, nd = NUM_DIGITS, delim ="\t"):
     f = "%%.%df" % nd
     if ch: # column header
-        csv = delim.join([x for x in m[0]]) + "\n" # source sequence
+        tsv = delim.join([x for x in m[0]]) + "\n" # source sequence
     for row in m[ch:]:
         if rh: # row header
-            csv += row[0] + delim # target sequence
-        csv += delim.join([f % x for x in row[rh:]]) + "\n"
-    return csv
+            tsv += row[0] + delim # target sequence
+        tsv += delim.join([f % x for x in row[rh:]]) + "\n"
+    return tsv
 
 def f1(p, r):
     if p + r:

@@ -34,7 +34,7 @@ def run_model(model, idx_to_word, idx_to_tag, batch):
             y = enumerate(result[i].exp().tolist())
             for a, b in sorted(y, key = lambda x: -x[1]):
                 print(idx_to_tag[a], round(b, NUM_DIGITS))
-            print(mat2csv(heatmap(Va[i], batch[i][2], idx_to_word))) # attention heatmap
+            print(mat2tsv(heatmap(Va[i], batch[i][2], idx_to_word))) # attention heatmap
     return [(x[1], *x[3:]) for x in sorted(batch[:batch_size])]
 
 def predict(filename, lb, model, word_to_idx, tag_to_idx, idx_to_word, idx_to_tag):
