@@ -59,5 +59,5 @@ if __name__ == "__main__":
     with torch.no_grad():
         result = predict(sys.argv[4], False, *load_model())
         print()
-        for x, _, y, p in result:
-            print((x, y, p))
+        for x, y0, y1, p in result:
+            print((x, y1, p))
