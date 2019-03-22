@@ -66,7 +66,7 @@ def train():
             save_checkpoint(filename, model, ei, loss_sum, timer)
         if EVAL_EVERY and (ei % EVAL_EVERY == 0 or ei == epoch + num_epochs):
             args = [model, word_to_idx, tag_to_idx, idx_to_word, idx_to_tag]
-            evaluate(predict(sys.argv[5], True, *args), True)
+            evaluate(predict(sys.argv[5], *args), True)
             print()
 if __name__ == "__main__":
     if len(sys.argv) not in [6, 7]:

@@ -37,12 +37,12 @@ def run_model(model, idx_to_word, idx_to_tag, batch):
             print(mat2tsv(heatmap(Va[i], batch[i][2], idx_to_word))) # attention heatmap
     return [(x[1], *x[3:]) for x in sorted(batch[:batch_size])]
 
-def predict(filename, lb, model, word_to_idx, tag_to_idx, idx_to_word, idx_to_tag):
+def predict(filename, model, word_to_idx, tag_to_idx, idx_to_word, idx_to_tag):
     data = []
     fo = open(filename)
     for idx, line in enumerate(fo):
         line = line.strip()
-        line, y = line.split("\t") if lb else [line, ""]
+        line, y = line.split("\t") if line.count("\t") else [line, None]
         x = tokenize(line, UNIT)
         x = [word_to_idx[i] if i in word_to_idx else UNK_IDX for i in x]
         data.append([idx, line, x, y])
@@ -57,7 +57,7 @@ if __name__ == "__main__":
         sys.exit("Usage: %s model word_to_idx tag_to_idx test_data" % sys.argv[0])
     print("cuda: %s" % CUDA)
     with torch.no_grad():
-        result = predict(sys.argv[4], False, *load_model())
+        result = predict(sys.argv[4], *load_model())
         print()
         for x, y0, y1, p in result:
-            print((x, y1, p))
+            print((x, y0, y1, p) if y0 else (x, y1, p))
