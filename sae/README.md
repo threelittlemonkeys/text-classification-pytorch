@@ -21,7 +21,7 @@ python prepare.py training_data
 
 To train:
 ```
-python train.py model vocab.src vocab.tgt training_data.tsv num_epoch
+python train.py model vocab.src vocab.tgt training_data.csv num_epoch
 ```
 
 To predict:
