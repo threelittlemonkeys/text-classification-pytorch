@@ -7,34 +7,32 @@ from os.path import isfile
 
 def load_data():
     data = []
-    batch_x = []
-    batch_y = []
-    batch_len = 0 # maximum sequence length of a mini-batch
-    print("loading data...")
-    word_to_idx = load_tkn_to_idx(sys.argv[2])
-    tag_to_idx = load_tkn_to_idx(sys.argv[3])
-    fo = open(sys.argv[4], "r")
+    bx = [] # word sequence batch
+    by = [] # label batch
+    cti = load_tkn_to_idx(sys.argv[2]) # char_to_idx
+    itw = load_idx_to_tkn(sys.argv[3]) # idx_to_word
+    tti = load_tkn_to_idx(sys.argv[4]) # tag_to_idx
+    print("loading %s" % sys.argv[5])
+    fo = open(sys.argv[5], "r")
     for line in fo:
         line = line.strip()
-        seq = [int(i) for i in line.split(" ")]
-        label = seq.pop()
-        if len(batch_x) == 0: # the first line has the maximum sequence length
-            batch_len = max(len(seq), max(KERNEL_SIZES))
-        batch_x.append([SOS_IDX] + seq + [EOS_IDX] + [PAD_IDX] * (batch_len - len(seq)))
-        batch_y.append(label)
-        if len(batch_x) == BATCH_SIZE:
-            data.append((LongTensor(batch_x), LongTensor(batch_y))) # append a mini-batch
-            batch_x = []
-            batch_y = []
+        *x, y = [int(i) for i in line.split(" ")]
+        bx.append(x)
+        by.append(y)
+        if len(bx) == BATCH_SIZE:
+            bxc, bxw = list_to_batch(bx, itw, cti if "char" in EMBED else None)
+            data.append((LongTensor(bxc), LongTensor(bxw), LongTensor(by)))
+            bx = []
+            by = []
     fo.close()
     print("data size: %d" % (len(data) * BATCH_SIZE))
     print("batch size: %d" % BATCH_SIZE)
-    return data, word_to_idx, tag_to_idx
+    return data, len(cti), len(itw), len(tti)
 
 def train():
-    num_epochs = int(sys.argv[5])
-    data, word_to_idx, tag_to_idx = load_data()
-    model = cnn(len(word_to_idx), len(tag_to_idx))
+    num_epochs = int(sys.argv[6])
+    data, char_vocab_size, word_vocab_size, num_labels = load_data()
+    model = cnn(char_vocab_size, word_vocab_size, num_labels)
     print(model)
     optim = torch.optim.Adam(model.parameters(), lr = LEARNING_RATE)
     epoch = load_checkpoint(sys.argv[1], model) if isfile(sys.argv[1]) else 0
@@ -43,9 +41,9 @@ def train():
     for ei in range(epoch + 1, epoch + num_epochs + 1):
         loss_sum = 0
         timer = time.time()
-        for x, y in data:
+        for xc, xw, y in data:
             model.zero_grad()
-            loss = F.nll_loss(model(x), y) # forward pass and compute loss
+            loss = F.nll_loss(model(xc, xw), y) # forward pass and compute loss
             loss.backward() # compute gradients
             optim.step() # update parameters
             loss = loss.tolist()
@@ -58,7 +56,7 @@ def train():
             save_checkpoint(filename, model, ei, loss_sum, timer)
 
 if __name__ == "__main__":
-    if len(sys.argv) != 6:
-        sys.exit("Usage: %s model word_to_idx tag_to_idx training_data num_epoch" % sys.argv[0])
+    if len(sys.argv) != 7:
+        sys.exit("Usage: %s model char_to_idx word_to_idx tag_to_idx training_data num_epoch" % sys.argv[0])
     print("cuda: %s" % CUDA)
     train()

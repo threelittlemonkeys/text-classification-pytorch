@@ -1,16 +1,18 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+from embedding import embed
+from parameters import *
 
-torch.manual_seed(1)
 CUDA = torch.cuda.is_available()
+torch.manual_seed(0) # for reproducibility
 
 class cnn(nn.Module):
-    def __init__(self, vocab_size, num_labels):
+    def __init__(self, char_vocab_size, word_vocab_size, num_labels):
         super().__init__()
 
         # architecture
-        self.embed = nn.Embedding(vocab_size, EMBED_SIZE, padding_idx = PAD_IDX)
+        self.embed = embed(char_vocab_size, word_vocab_size, EMBED_SIZE)
         self.conv = nn.ModuleList([nn.Conv2d(
             in_channels = 1,
             out_channels = NUM_FEATURE_MAPS,
@@ -23,8 +25,8 @@ class cnn(nn.Module):
         if CUDA:
             self = self.cuda()
 
-    def forward(self, x):
-        x = self.embed(x) # [B, L, H]
+    def forward(self, xc, xw):
+        x = self.embed(xc, xw) # [B, L, H]
         x = x.unsqueeze(1) # [B, in_channels (Ci), L, H]
         h = [conv(x) for conv in self.conv] # [B, out_channels (Co), L, 1] * num_kernels (K)
         h = [F.relu(k).squeeze(3) for k in h] # [B, Co, L] * K

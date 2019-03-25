@@ -1,4 +1,5 @@
 import re
+from parameters import *
 
 def normalize(x):
     x = re.sub("^ | $", "", x)
@@ -48,6 +49,7 @@ def save_tkn_to_idx(filename, tkn_to_idx):
     fo.close()
 
 def load_checkpoint(filename, model = None):
+    import torch
     print("loading model...")
     checkpoint = torch.load(filename)
     model.load_state_dict(checkpoint["state_dict"])
@@ -57,6 +59,7 @@ def load_checkpoint(filename, model = None):
     return epoch
 
 def save_checkpoint(filename, model, epoch, loss, time):
+    import torch
     print("epoch = %d, loss = %f, time = %f" % (epoch, loss, time))
     if filename and model:
         print("saving model...")
@@ -67,9 +70,24 @@ def save_checkpoint(filename, model, epoch, loss, time):
         torch.save(checkpoint, filename + ".epoch%d" % epoch)
         print("saved model at epoch %d" % epoch)
 
-def heatmap(m, x, idx_to_word):
+def list_to_batch(bx, itw, cti):
+    bxc = []
+    if cti:
+        bxc = [[[cti[c] for c in itw[i]] for i in x] for x in bx] if itw \
+        else [[[cti[c] if c in cti else UNK_IDX for c in w] for w in x] for x in bx]
+    bxc_len = max(len(w) for x in bxc for w in x)
+    bxw_len = max(max(len(x) for x in bx), max(KERNEL_SIZES))
+    for x in bxc:
+        for w in x:
+            w.insert(0, SOS_IDX)
+            w.extend([EOS_IDX] + [PAD_IDX] * (bxc_len - len(w) + 1))
+        x.extend([[PAD_IDX] * (bxc_len + 2)] * (bxw_len - len(x) + 2))
+    bxw = [[SOS_IDX] + x + [EOS_IDX] + [PAD_IDX] * (bxw_len - len(x)) for x in bx]
+    return bxc, bxw
+
+def heatmap(m, x, itw):
     y = []
-    y.append([idx_to_word[c] for c in x]) # input
+    y.append([itw[c] for c in x]) # input
     for v in m: # weights
         y.append([x for x in v[:len(x)]])
     return y
