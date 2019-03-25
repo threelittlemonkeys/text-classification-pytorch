@@ -1,5 +1,6 @@
 import re
 
+def normalize(x):
     x = re.sub("^ | $", "", x)
     x = x.lower()
     return x
