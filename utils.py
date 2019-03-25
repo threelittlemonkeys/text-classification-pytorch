@@ -2,6 +2,7 @@ import re
 from parameters import *
 
 def normalize(x):
+    x = re.sub("\s+", " ", x)
     x = re.sub("^ | $", "", x)
     x = x.lower()
     return x
@@ -27,7 +28,7 @@ def load_tkn_to_idx(filename):
     tkn_to_idx = {}
     fo = open(filename)
     for line in fo:
-        line = line.strip()
+        line = line[:-1]
         tkn_to_idx[line] = len(tkn_to_idx)
     fo.close()
     return tkn_to_idx
@@ -37,7 +38,7 @@ def load_idx_to_tkn(filename):
     idx_to_tkn = []
     fo = open(filename)
     for line in fo:
-        line = line.strip()
+        line = line[:-1]
         idx_to_tkn.append(line)
     fo.close()
     return idx_to_tkn
@@ -70,11 +71,10 @@ def save_checkpoint(filename, model, epoch, loss, time):
         torch.save(checkpoint, filename + ".epoch%d" % epoch)
         print("saved model at epoch %d" % epoch)
 
-def list_to_batch(bx, itw, cti):
-    bxc = []
-    if cti:
-        bxc = [[[cti[c] for c in itw[i]] for i in x] for x in bx] if itw \
-        else [[[cti[c] if c in cti else UNK_IDX for c in w] for w in x] for x in bx]
+def batchify(bx, itw, cti):
+    bxc = ([[[cti[c] for c in itw[i]] for i in x] for x in bx] if itw \
+    else [[[cti[c] if c in cti else UNK_IDX for c in w] for w in x] for x in bx]) \
+    if cti else []
     bxc_len = max(len(w) for x in bxc for w in x)
     bxw_len = max(max(len(x) for x in bx), max(KERNEL_SIZES))
     for x in bxc:

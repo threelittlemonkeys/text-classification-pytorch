@@ -20,7 +20,7 @@ def load_data():
         bx.append(x)
         by.append(y)
         if len(bx) == BATCH_SIZE:
-            bxc, bxw = list_to_batch(bx, itw, cti if "char" in EMBED else None)
+            bxc, bxw = batchify(bx, itw, cti if "char" in EMBED else None)
             data.append((LongTensor(bxc), LongTensor(bxw), LongTensor(by)))
             bx = []
             by = []
