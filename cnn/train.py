@@ -16,9 +16,13 @@ def load_data():
     fo = open(sys.argv[5], "r")
     for line in fo:
         line = line.strip()
-        *x, y = [int(i) for i in line.split(" ")]
+        *x, y = [x.split(":") for x in line.split(" ")]
+        # bxc, bxw = zip(*map(lambda x: (x[0], x[1]), zip(*x)))
+        # print(bxc)
+        exit()
         bx.append(x)
-        by.append(y)
+        by.extend(y)
+        exit()
         if len(bx) == BATCH_SIZE:
             bxc, bxw = batchify(bx, itw, cti if "char" in EMBED else None)
             data.append((LongTensor(bxc), LongTensor(bxw), LongTensor(by)))

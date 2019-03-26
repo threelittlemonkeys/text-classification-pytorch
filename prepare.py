@@ -20,7 +20,7 @@ def load_data():
                 wti[w] = len(wti)
         if y not in tti:
             tti[y] = len(tti)
-        x = ["%d:" % wti[w] + "+".join(str(cti[c]) for c in w) for w in x]
+        x = ["+".join(str(cti[c]) for c in w) + ":%d" % wti[w] for w in x]
         y = [str(tti[y])]
         data.append(x + y)
     data.sort(key = len, reverse = True)
