@@ -7,7 +7,8 @@ from os.path import isfile
 
 def load_data():
     data = []
-    bx = [] # word sequence batch
+    bxc = [] # character sequence batch
+    bxw = [] # word sequence batch
     by = [] # label batch
     cti = load_tkn_to_idx(sys.argv[2]) # char_to_idx
     itw = load_idx_to_tkn(sys.argv[3]) # idx_to_word
@@ -17,16 +18,15 @@ def load_data():
     for line in fo:
         line = line.strip()
         *x, y = [x.split(":") for x in line.split(" ")]
-        # bxc, bxw = zip(*map(lambda x: (x[0], x[1]), zip(*x)))
-        # print(bxc)
-        exit()
-        bx.append(x)
-        by.extend(y)
-        exit()
-        if len(bx) == BATCH_SIZE:
-            bxc, bxw = batchify(bx, itw, cti if "char" in EMBED else None)
+        xc, xw = zip(*[(list(map(int, xc.split("+"))), int(xw)) for xc, xw in x])
+        bxc.append(xc)
+        bxw.append(xw)
+        by.append(int(y[0]))
+        if len(by) == BATCH_SIZE:
+            bxc, bxw = batchify(bxc, bxw, max(KERNEL_SIZES))
             data.append((LongTensor(bxc), LongTensor(bxw), LongTensor(by)))
-            bx = []
+            bxc = []
+            bxw = []
             by = []
     fo.close()
     print("data size: %d" % (len(data) * BATCH_SIZE))
