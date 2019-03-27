@@ -71,13 +71,13 @@ def save_checkpoint(filename, model, epoch, loss, time):
         torch.save(checkpoint, filename + ".epoch%d" % epoch)
         print("saved model at epoch %d" % epoch)
 
-def batchify(bxc, bxw, minlen = 0):
-    bxc_len = max(minlen, max(len(w) for x in bxc for w in x))
-    bxw_len = max(minlen, max(len(x) for x in bxw))
-    bxc = [[[SOS_IDX] + w + [EOS_IDX] + [PAD_IDX] * (bxc_len - len(w)) for w in x] for x in bxc]
-    bxc = [x + [[PAD_IDX] * (bxc_len + 2)] * (bxw_len - len(x) + 2) for x in bxc]
-    bxw = [[SOS_IDX] + list(x) + [EOS_IDX] + [PAD_IDX] * (bxw_len - len(x)) for x in bxw]
-    return bxc, bxw
+def batchify(xc, xw, minlen = 0):
+    xc_len = max(minlen, max(len(w) for x in xc for w in x))
+    xw_len = max(minlen, max(len(x) for x in xw))
+    xc = [[[SOS_IDX] + w + [EOS_IDX] + [PAD_IDX] * (xc_len - len(w)) for w in x] for x in xc]
+    xc = [x + [[PAD_IDX] * (xc_len + 2)] * (xw_len - len(x) + 2) for x in xc]
+    xw = [[SOS_IDX] + list(x) + [EOS_IDX] + [PAD_IDX] * (xw_len - len(x)) for x in xw]
+    return xc, xw
 
 def heatmap(m, x, itw):
     y = []

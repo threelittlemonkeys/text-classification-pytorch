@@ -6,7 +6,7 @@ from utils import *
 def load_model():
     cti = load_tkn_to_idx(sys.argv[2]) # char_to_idx
     wti = load_tkn_to_idx(sys.argv[3]) # word_to_idx
-    itt = load_idx_to_tag(sys.argv[4]) # idx_to_tag
+    itt = load_idx_to_tkn(sys.argv[4]) # idx_to_tag
     model = cnn(len(cti), len(wti), len(itt))
     print(model)
     model.eval()
@@ -16,11 +16,10 @@ def load_model():
 def run_model(model, itt, batch):
     batch_size = len(batch) # real batch size
     while len(batch) < BATCH_SIZE:
-        batch.append([-1, "", [], ""])
+        batch.append([-1, "", [], [], ""])
     batch.sort(key = lambda x: -len(x[2]))
-    batch_len = max(len(batch[0][2]), max(KERNEL_SIZES))
-    x = [[SOS_IDX] + x[2] + [EOS_IDX] + [PAD_IDX] * (batch_len - len(x[2])) for x in batch]
-    result = model(LongTensor(x))
+    xc, xw = batchify(*zip(*[(x[2], x[3]) for x in batch]), max(KERNEL_SIZES))
+    result = model(LongTensor(xc), LongTensor(xw))
     for i in range(batch_size):
         y = itt[result[i].argmax()]
         p = round(max(result[i]).exp().item(), NUM_DIGITS)
@@ -32,10 +31,9 @@ def run_model(model, itt, batch):
             y = torch.exp(result[i]).tolist()
             for j, p in sorted(enumerate(y), key = lambda x: -x[1]):
                 print("%s %.6f" % (itt[j], p))
-    return [(x[1], *x[3:]) for x in sorted(batch[:batch_size])]
+    return [(x[1], *x[4:]) for x in sorted(batch[:batch_size])]
 
 def predict(filename, model, cti, wti, itt):
-    bx = []
     data = []
     model, cti, wti, itt = load_model()
     fo = open(filename)
@@ -43,9 +41,9 @@ def predict(filename, model, cti, wti, itt):
         line = line.strip()
         line, y = line.split("\t") if line.count("\t") else [line, None]
         x = tokenize(line, UNIT)
-        x = [wti[w] if w in wti else UNK_IDX for w in x]
-        bx.append(x)
-        data.append([idx, line, y])
+        xc = [[cti[c] if c in cti else UNK_IDX for c in w] for w in x]
+        xw = [wti[w] if w in wti else UNK_IDX for w in x]
+        data.append([idx, line, xc, xw, y])
     fo.close()
     for i in range(0, len(data), BATCH_SIZE):
         batch = data[i:i + BATCH_SIZE]
