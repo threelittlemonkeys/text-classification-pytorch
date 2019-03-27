@@ -22,7 +22,7 @@ def run_model(model, itt, batch):
     result = model(LongTensor(xc), LongTensor(xw))
     for i in range(batch_size):
         y = itt[result[i].argmax()]
-        p = round(max(result[i]).exp().item(), NUM_DIGITS)
+        p = result[i].max().exp().item()
         batch[i].append(y)
         batch[i].append(p)
         if VERBOSE:
@@ -30,12 +30,11 @@ def run_model(model, itt, batch):
             print(batch[i])
             y = torch.exp(result[i]).tolist()
             for j, p in sorted(enumerate(y), key = lambda x: -x[1]):
-                print("%s %.6f" % (itt[j], p))
+                print("%s %f" % (itt[j], p))
     return [(x[1], *x[4:]) for x in sorted(batch[:batch_size])]
 
 def predict(filename, model, cti, wti, itt):
     data = []
-    model, cti, wti, itt = load_model()
     fo = open(filename)
     for idx, line in enumerate(fo):
         line = line.strip()

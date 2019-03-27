@@ -2,41 +2,18 @@ import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-
-UNIT = "char" # unit of tokenization (char, word)
-RNN_TYPE = "LSTM"
-NUM_DIRS = 2 # unidirectional: 1, bidirectional: 2
-BATCH_SIZE = 128
-EMBED_SIZE = 300
-HIDDEN_SIZE = 500
-DROPOUT = 0.5
-NUM_HEADS = 8
-DK = HIDDEN_SIZE // NUM_HEADS # dimension of key
-DV = HIDDEN_SIZE // NUM_HEADS # dimension of value
-LEARNING_RATE = 1e-4
-VERBOSE = False
-EVAL_EVERY = 10
-SAVE_EVERY = 10
-
-PAD = "<PAD>" # padding
-SOS = "<SOS>" # start of sequence
-EOS = "<EOS>" # end of sequence
-UNK = "<UNK>" # unknown token
-
-PAD_IDX = 0
-SOS_IDX = 1
-EOS_IDX = 2
-UNK_IDX = 3
+from embedding import embed
+from parameters import *
 
 torch.manual_seed(1)
 CUDA = torch.cuda.is_available()
 
 class rnn(nn.Module):
-    def __init__(self, vocab_size, num_labels):
+    def __init__(self, char_vocab_size, word_vocab_size, num_labels):
         super().__init__()
 
         # architecture
-        self.embed = nn.Embedding(vocab_size, EMBED_SIZE, padding_idx = PAD_IDX)
+        self.embed = embed(char_vocab_size, word_vocab_size, EMBED_SIZE)
         self.rnn1 = getattr(nn, RNN_TYPE)(
             input_size = EMBED_SIZE,
             hidden_size = HIDDEN_SIZE // NUM_DIRS,
@@ -65,10 +42,10 @@ class rnn(nn.Module):
             return (h, c)
         return h
 
-    def forward(self, x, mask):
+    def forward(self, xc, xw, mask):
         self.hidden1 = self.init_hidden()
         self.hidden2 = self.init_hidden()
-        x = self.embed(x)
+        x = self.embed(xc, xw)
         x = nn.utils.rnn.pack_padded_sequence(x, mask[1], batch_first = True)
         h1, self.hidden1 = self.rnn1(x, self.hidden1)
         h2, self.hidden2 = self.rnn2(h1, self.hidden2)

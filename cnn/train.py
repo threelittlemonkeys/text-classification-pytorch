@@ -3,6 +3,7 @@ import re
 import time
 from model import *
 from utils import *
+from evaluate import *
 from os.path import isfile
 
 def load_data():
