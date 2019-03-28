@@ -47,17 +47,18 @@ def predict(filename, model, cti, wti, itt, itw):
         xw = [wti[w] if w in wti else UNK_IDX for w in x]
         data.append([idx, line, xc, xw, y])
     fo.close()
-    for i in range(0, len(data), BATCH_SIZE):
-        batch = data[i:i + BATCH_SIZE]
-        for y in run_model(model, itw, itt, batch):
-            yield y
+    with torch.no_grad():
+        model.eval()
+        for i in range(0, len(data), BATCH_SIZE):
+            batch = data[i:i + BATCH_SIZE]
+            for y in run_model(model, itw, itt, batch):
+                yield y
 
 if __name__ == "__main__":
     if len(sys.argv) != 6:
         sys.exit("Usage: %s model char_to_idx word_to_idx tag_to_idx test_data" % sys.argv[0])
     print("cuda: %s" % CUDA)
-    with torch.no_grad():
-        result = predict(sys.argv[5], *load_model())
-        print()
-        for x, y0, y1, p in result:
-            print((x, y0, y1, p) if y0 else (x, y1, p))
+    result = predict(sys.argv[5], *load_model())
+    print()
+    for x, y0, y1, p in result:
+        print((x, y0, y1, p) if y0 else (x, y1, p))

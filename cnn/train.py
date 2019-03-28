@@ -62,6 +62,7 @@ def train():
         if EVAL_EVERY and (ei % EVAL_EVERY == 0 or ei == epoch + num_epochs):
             args = [model, cti, wti, itt]
             evaluate(predict(sys.argv[6], *args), True)
+            model.train()
             print()
 
 if __name__ == "__main__":

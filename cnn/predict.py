@@ -9,7 +9,6 @@ def load_model():
     itt = load_idx_to_tkn(sys.argv[4]) # idx_to_tag
     model = cnn(len(cti), len(wti), len(itt))
     print(model)
-    model.eval()
     load_checkpoint(sys.argv[1], model)
     return model, cti, wti, itt
 
@@ -44,17 +43,18 @@ def predict(filename, model, cti, wti, itt):
         xw = [wti[w] if w in wti else UNK_IDX for w in x]
         data.append([idx, line, xc, xw, y])
     fo.close()
-    for i in range(0, len(data), BATCH_SIZE):
-        batch = data[i:i + BATCH_SIZE]
-        for y in run_model(model, itt, batch):
-            yield y
+    with torch.no_grad():
+        model.eval()
+        for i in range(0, len(data), BATCH_SIZE):
+            batch = data[i:i + BATCH_SIZE]
+            for y in run_model(model, itt, batch):
+                yield y
 
 if __name__ == "__main__":
     if len(sys.argv) != 6:
         sys.exit("Usage: %s model char_to_idx word_to_idx tag_to_idx test_data" % sys.argv[0])
     print("cuda: %s" % CUDA)
-    with torch.no_grad():
-        result = predict(sys.argv[5], *load_model())
-        print()
-        for x, y0, y1, p in result:
-            print((x, y0, y1, p) if y0 else (x, y1, p))
+    result = predict(sys.argv[5], *load_model())
+    print()
+    for x, y0, y1, p in result:
+        print((x, y0, y1, p) if y0 else (x, y1, p))
