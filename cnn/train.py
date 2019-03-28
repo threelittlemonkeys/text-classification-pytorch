@@ -12,8 +12,8 @@ def load_data():
     bxw = [] # word sequence batch
     by = [] # label batch
     cti = load_tkn_to_idx(sys.argv[2]) # char_to_idx
-    itw = load_idx_to_tkn(sys.argv[3]) # idx_to_word
-    tti = load_tkn_to_idx(sys.argv[4]) # tag_to_idx
+    wti = load_tkn_to_idx(sys.argv[3]) # word_to_idx
+    itt = load_idx_to_tkn(sys.argv[4]) # idx_to_tkn
     print("loading %s" % sys.argv[5])
     fo = open(sys.argv[5], "r")
     for line in fo:
@@ -32,12 +32,12 @@ def load_data():
     fo.close()
     print("data size: %d" % (len(data) * BATCH_SIZE))
     print("batch size: %d" % BATCH_SIZE)
-    return data, len(cti), len(itw), len(tti)
+    return data, cti, wti, itt
 
 def train():
-    num_epochs = int(sys.argv[6])
-    data, char_vocab_size, word_vocab_size, num_labels = load_data()
-    model = cnn(char_vocab_size, word_vocab_size, num_labels)
+    num_epochs = int(sys.argv[-1])
+    data, cti, wti, itt = load_data()
+    model = cnn(len(cti), len(wti), len(itt))
     print(model)
     optim = torch.optim.Adam(model.parameters(), lr = LEARNING_RATE)
     epoch = load_checkpoint(sys.argv[1], model) if isfile(sys.argv[1]) else 0
@@ -59,9 +59,13 @@ def train():
             save_checkpoint("", None, ei, loss_sum, timer)
         else:
             save_checkpoint(filename, model, ei, loss_sum, timer)
+        if EVAL_EVERY and (ei % EVAL_EVERY == 0 or ei == epoch + num_epochs):
+            args = [model, cti, wti, itt]
+            evaluate(predict(sys.argv[6], *args), True)
+            print()
 
 if __name__ == "__main__":
-    if len(sys.argv) != 7:
-        sys.exit("Usage: %s model char_to_idx word_to_idx tag_to_idx training_data num_epoch" % sys.argv[0])
+    if len(sys.argv) not in [7, 8]:
+        sys.exit("Usage: %s model char_to_idx word_to_idx tag_to_idx training_data (validation_data) num_epoch" % sys.argv[0])
     print("cuda: %s" % CUDA)
     train()
