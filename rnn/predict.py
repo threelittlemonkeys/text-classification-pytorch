@@ -10,7 +10,6 @@ def load_model():
     itw = idx_to_tkn(wti) # idx_to_word
     model = rnn(len(wti), len(tti))
     print(model)
-    model.eval()
     load_checkpoint(sys.argv[1], model)
     return model, cti, wti, itt, itw
 

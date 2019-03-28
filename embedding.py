@@ -9,14 +9,14 @@ class embed(nn.Module):
         dim = embed_size // len(EMBED) # dimension of each embedding vector
 
         # architecture
-        if "char" in EMBED:
+        if "char-cnn" in EMBED:
             self.char_embed = embed_cnn(char_vocab_size, dim)
-        if "word" in EMBED:
+        if "lookup" in EMBED:
             self.word_embed = nn.Embedding(word_vocab_size, dim, padding_idx = PAD_IDX)
 
     def forward(self, xc, xw):
-        hc = self.char_embed(xc) if "char" in EMBED else None
-        hw = self.word_embed(xw) if "word" in EMBED else None
+        hc = self.char_embed(xc) if "char-cnn" in EMBED else None
+        hw = self.word_embed(xw) if "lookup" in EMBED else None
         h = torch.cat([h for h in [hc, hw] if type(h) == torch.Tensor], 2)
         return h
 
