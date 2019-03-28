@@ -3,6 +3,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 from embedding import embed
 from parameters import *
+from utils import *
 
 CUDA = torch.cuda.is_available()
 torch.manual_seed(0) # for reproducibility
@@ -36,7 +37,3 @@ class cnn(nn.Module):
         h = self.fc(h) # fully connected layer
         y = self.softmax(h)
         return y
-
-def LongTensor(*args):
-    x = torch.LongTensor(*args)
-    return x.cuda() if CUDA else x

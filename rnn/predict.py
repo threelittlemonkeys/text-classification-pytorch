@@ -20,7 +20,7 @@ def run_model(model, itw, itt, batch):
         batch.append([-1, "", [], [], ""])
     batch.sort(key = lambda x: -len(x[3]))
     xc, xw = batchify(*zip(*[(x[2], x[3]) for x in batch]))
-    result = model(LongTensor(xc), LongTensor(xw), maskset(xw))
+    result = model(xc, xw, maskset(xw))
     if VERBOSE:
         Va = model.attn.Va.squeeze(2).tolist() # attention weights
     for i in range(batch_size):

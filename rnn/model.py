@@ -4,9 +4,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 from embedding import embed
 from parameters import *
-
-torch.manual_seed(1)
-CUDA = torch.cuda.is_available()
+from utils import *
 
 class rnn(nn.Module):
     def __init__(self, char_vocab_size, word_vocab_size, num_labels):
@@ -112,19 +110,3 @@ class attn_mh(nn.Module): # multi-head attention
         z = self.Wo(z).squeeze(1)
         z = self.norm(x + self.dropout(z)) # residual connection and dropout
         return z
-
-def Tensor(*args):
-    x = torch.Tensor(*args)
-    return x.cuda() if CUDA else x
-
-def LongTensor(*args):
-    x = torch.LongTensor(*args)
-    return x.cuda() if CUDA else x
-
-def zeros(*args):
-    x = torch.zeros(*args)
-    return x.cuda() if CUDA else x
-
-def maskset(x):
-    mask = x.data.eq(PAD_IDX)
-    return (mask, x.size(1) - mask.sum(1)) # set of mask and lengths

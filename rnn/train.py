@@ -27,7 +27,7 @@ def load_data():
         by.append(int(y[0]))
         if len(by) == BATCH_SIZE:
             bxc, bxw = batchify(bxc, bxw)
-            data.append((LongTensor(bxc), LongTensor(bxw), LongTensor(by)))
+            data.append((bxc, bxw, LongTensor(by)))
             bxc = []
             bxw = []
             by = []
@@ -58,7 +58,6 @@ def train():
             optim.step()
             loss = loss.tolist()
             loss_sum += loss
-            # print("epoch = %d, iteration = %d, loss = %f" % (ei, ii, loss))
         timer = time.time() - timer
         loss_sum /= len(data)
         if ei % SAVE_EVERY and ei != epoch + num_epochs:

@@ -1,3 +1,5 @@
+import torch
+
 UNIT = "word" # unit of tokenization (char, word)
 BATCH_SIZE = 64
 EMBED = ["char", "word"] # embeddings (char, word)
@@ -19,6 +21,9 @@ PAD_IDX = 0
 SOS_IDX = 1
 EOS_IDX = 2
 UNK_IDX = 3
+
+torch.manual_seed(1)
+CUDA = torch.cuda.is_available()
 
 KEEP_IDX = False # use the existing indices when preparing additional data
 NUM_DIGITS = 4 # number of digits to print
