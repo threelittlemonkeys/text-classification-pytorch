@@ -2,6 +2,10 @@
 
 A minimal PyTorch implementation of Convolutional Neural Networks (CNNs) for text classification.
 
+Supported features:
+- Character and/or word embeddings in the input layer
+- Mini-batch training with CUDA
+
 ## Usage
 
 Training data should be formatted as below:

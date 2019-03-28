@@ -3,6 +3,7 @@
 A PyTorch implementation of Recurrent Neural Networks (RNNs) for text classification.
 
 Supported features:
+- Character and/or word embeddings in the input layer
 - Mini-batch training with CUDA
 - Global attention (Luong et al 2015)
 - Self attention (Vaswani et al 2017)
