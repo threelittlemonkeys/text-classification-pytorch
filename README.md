@@ -25,6 +25,8 @@ Hoa T. Le, Christophe Cerisara, Alexandre Denis. 2017. [Do Convolutional Network
 
 Hao Peng, Jianxin Li, Yu He, Yaopeng Liu, Mengjiao Bao, Lihong Wang, Yangqiu Song, Qiang Yang. 2018. [Large-Scale Hierarchical Text Classification with Recursively Regularized Deep Graph-CNN.](http://www.cse.ust.hk/~yqsong/papers/2018-WWW-Text-GraphCNN.pdf) In Proceedings of the International World Wide Web Conference Committee (IW3C2).
 
+Yunlun Yang, Yunhai Tong, Shulei Ma, Zhi-Hong Deng. 2016. [A Position Encoding Convolutional Neural Network Based on Dependency Tree for Relation Classification.](https://aclweb.org/anthology/D16-1007) In EMNLP.
+
 Zichao Yang, Diyi Yang, Chris Dyer, Xiaodong He, Alex Smola, Eduard Hovy. 2016. [Hierarchical Attention Networks for Document Classification.](http://www.aclweb.org/anthology/N16-1174) In Proceedings of NAACL-HLT 2016.
 
 Wenpeng Yin, Katharina Kann, Mo Yu, Hinrich Schütze. 2017. [Comparative Study of CNN and RNN for Natural Language Processing.](https://arxiv.org/abs/1702.01923) arXiv:1702.01923.
