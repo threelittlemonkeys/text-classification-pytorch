@@ -1,5 +1,4 @@
 from predict import *
-from collections import defaultdict
 
 def evaluate(result, summary = False):
     avg = defaultdict(float) # average

@@ -1,9 +1,5 @@
-import sys
-import re
-import time
 from model import *
 from utils import *
-from os.path import isfile
 
 def load_data():
     data = []
