@@ -1,6 +1,4 @@
-import sys
 from utils import *
-from parameters import *
 
 def load_data():
     data = []

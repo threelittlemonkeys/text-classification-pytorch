@@ -1,9 +1,5 @@
-import torch
-import torch.nn as nn
-import torch.nn.functional as F
-from embedding import embed
-from parameters import *
 from utils import *
+from embedding import embed
 
 CUDA = torch.cuda.is_available()
 torch.manual_seed(0) # for reproducibility

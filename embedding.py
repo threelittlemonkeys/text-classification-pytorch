@@ -1,7 +1,4 @@
-import torch
-import torch.nn as nn
-import torch.nn.functional as F
-from parameters import *
+from utils import *
 
 class embed(nn.Module):
     def __init__(self, char_vocab_size, word_vocab_size, embed_size):

@@ -1,10 +1,5 @@
-import numpy as np
-import torch
-import torch.nn as nn
-import torch.nn.functional as F
-from embedding import embed
-from parameters import *
 from utils import *
+from embedding import embed
 
 class rnn(nn.Module):
     def __init__(self, char_vocab_size, word_vocab_size, num_labels):

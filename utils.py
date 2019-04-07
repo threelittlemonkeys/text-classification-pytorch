@@ -2,6 +2,8 @@ import sys
 import re
 import time
 import torch
+import torch.nn as nn
+import torch.nn.functional as F
 from os.path import isfile
 from parameters import *
 from collections import defaultdict
@@ -95,15 +97,17 @@ def idx_to_tkn(tkn_to_idx):
     return [x for x, _ in sorted(tkn_to_idx.items(), key = lambda x: x[1])]
 
 def batchify(xc, xw, minlen = 0, sos = True, eos = True):
-    xc_len = max(minlen, max(len(w) for x in xc for w in x))
     xw_len = max(minlen, max(len(x) for x in xw))
-    pad = [[PAD_IDX] * (xc_len + 2)]
-    xc = [[[SOS_IDX] + w + [EOS_IDX] + [PAD_IDX] * (xc_len - len(w)) for w in x] for x in xc]
-    xc = [(pad if sos else []) + x + (pad * (xw_len - len(x) + eos)) for x in xc]
+    if xc:
+        xc_len = max(minlen, max(len(w) for x in xc for w in x))
+        pad = [[PAD_IDX] * (xc_len + 2)]
+        xc = [[[SOS_IDX] + w + [EOS_IDX] + [PAD_IDX] * (xc_len - len(w)) for w in x] for x in xc]
+        xc = [(pad if sos else []) + x + (pad * (xw_len - len(x) + eos)) for x in xc]
+        xc = LongTensor(xc)
     sos = [SOS_IDX] if sos else []
     eos = [EOS_IDX] if eos else []
     xw = [sos + list(x) + eos + [PAD_IDX] * (xw_len - len(x)) for x in xw]
-    return LongTensor(xc), LongTensor(xw)
+    return xc, LongTensor(xw)
 
 def heatmap(m, x, itw):
     y = []
