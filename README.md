@@ -17,11 +17,13 @@ Bjarke Felbo, Alan Mislove, Anders Søgaard, Iyad Rahwan, Sune Lehmann. 2017. [U
 
 Linyuan Gong, Ruyi Ji. 2018. [What Does a TextCNN Learn?](https://arxiv.org/abs/1801.06287) arXiv:1801.06287.
 
-Siwei Lai, Liheng Xu, Kang Liu, Jun Zhao. 2015. [Recurrent Convolutional Neural Networks for Text Classification.](https://www.aaai.org/ocs/index.php/AAAI/AAAI15/paper/view/9745/9552) In Proceedings of the 29th AAAI Conference on Artificial Intelligence.
-
 Yoon Kim. 2014. [Convolutional Neural Networks for Sentence Classification.](https://arxiv.org/abs/1408.5882) arXiv:1408.5882.
 
+Siwei Lai, Liheng Xu, Kang Liu, Jun Zhao. 2015. [Recurrent Convolutional Neural Networks for Text Classification.](https://www.aaai.org/ocs/index.php/AAAI/AAAI15/paper/view/9745/9552) In Proceedings of the 29th AAAI Conference on Artificial Intelligence.
+
 Hoa T. Le, Christophe Cerisara, Alexandre Denis. 2017. [Do Convolutional Networks need to be Deep for Text Classification?](https://arxiv.org/abs/1707.04108) arXiv:1707.04108.
+
+Shuming Ma, Xu Sun, Junyang Lin, Xuancheng Ren. 2018. [A Hierarchical End-to-End Model for Jointly Improving Text Summarization and Sentiment Classification.](https://arxiv.org/abs/1805.01089) In IJCAI.
 
 Hao Peng, Jianxin Li, Yu He, Yaopeng Liu, Mengjiao Bao, Lihong Wang, Yangqiu Song, Qiang Yang. 2018. [Large-Scale Hierarchical Text Classification with Recursively Regularized Deep Graph-CNN.](http://www.cse.ust.hk/~yqsong/papers/2018-WWW-Text-GraphCNN.pdf) In Proceedings of the International World Wide Web Conference Committee (IW3C2).
 
