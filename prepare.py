@@ -21,8 +21,8 @@ def load_data():
         x = ["+".join(str(cti[c]) for c in w) + ":%d" % wti[w] for w in x]
         y = [str(tti[y])]
         data.append(x + y)
-    data.sort(key = len, reverse = True)
     fo.close()
+    data.sort(key = len, reverse = True)
     return data, cti, wti, tti
 
 if __name__ == "__main__":

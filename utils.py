@@ -77,17 +77,12 @@ def save_checkpoint(filename, model, epoch, loss, time):
         torch.save(checkpoint, filename + ".epoch%d" % epoch)
         print("saved model at epoch %d" % epoch)
 
-def Tensor(*args):
-    x = torch.Tensor(*args)
-    return x.cuda() if CUDA else x
+def cudify(f):
+    return lambda *x: f(*x).cuda() if CUDA else f(*x)
 
-def LongTensor(*args):
-    x = torch.LongTensor(*args)
-    return x.cuda() if CUDA else x
-
-def zeros(*args):
-    x = torch.zeros(*args)
-    return x.cuda() if CUDA else x
+Tensor = cudify(torch.Tensor)
+LongTensor = cudify(torch.LongTensor)
+zeros = cudify(torch.zeros)
 
 def maskset(x):
     mask = x.data.eq(PAD_IDX)
