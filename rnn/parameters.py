@@ -1,10 +1,10 @@
 import torch
 
-UNIT = "char" # unit of tokenization (char, word)
+UNIT = "word" # unit of tokenization (char, word)
 RNN_TYPE = "LSTM"
 NUM_DIRS = 2 # unidirectional: 1, bidirectional: 2
 BATCH_SIZE = 128
-EMBED = ["lookup"] # embeddings (char-cnn, lookup)
+EMBED = ["char-cnn", "lookup"] # embeddings (char-cnn, lookup)
 EMBED_SIZE = 300
 HIDDEN_SIZE = 500
 DROPOUT = 0.5
