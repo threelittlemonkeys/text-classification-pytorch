@@ -6,7 +6,7 @@ Minimal implementations of text classification models in PyTorch.
 - Convolutional Neural Networks (CNNs)
 - Character-level Convolutional Neural Networks (CNNs)
 - Very Deep Convolutional Networks (VDCNNs)
-- Recurrent Neural Networks (RNNs)
+- Recurrent Neural Networks with attention (RNNs)
 - Self-Attentive Encoder (SAE)
 
 ## References

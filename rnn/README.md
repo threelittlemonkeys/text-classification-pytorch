@@ -6,6 +6,7 @@ Supported features:
 - Character and/or word embeddings in the input layer
 - Mini-batch training with CUDA
 - Global attention (Luong et al 2015)
+- Multi-head attention (Vaswani et al 2017)
 - Self attention (Vaswani et al 2017)
 
 ## Usage

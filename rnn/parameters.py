@@ -7,6 +7,7 @@ BATCH_SIZE = 128
 EMBED = ["char-cnn", "lookup"] # embeddings (char-cnn, lookup)
 EMBED_SIZE = 300
 HIDDEN_SIZE = 500
+ATTN = "attn" # attention (attn: global attention, attn-rc: with residual connection, mh-attn: multi-head attention)
 DROPOUT = 0.5
 NUM_HEADS = 8
 DK = HIDDEN_SIZE // NUM_HEADS # dimension of key
