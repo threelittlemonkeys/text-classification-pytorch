@@ -96,7 +96,8 @@ class attn_mh(nn.Module): # multi-head attention
         c = np.sqrt(DK) # scale factor
         a = torch.matmul(q, k.transpose(2, 3)) / c # compatibility function
         a = a.masked_fill(mask, -10000) # masking in log space
-        a = self.Va = F.softmax(a, 3) # [B, NUM_HEADS, 1, L]
+        a = F.softmax(a, 3) # [B, NUM_HEADS, 1, L]
+        self.Va = a.squeeze(2)
         a = torch.matmul(a, v) # [B, NUM_HEADS, 1, DV]
         return a # attention weights
 

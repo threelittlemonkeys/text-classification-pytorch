@@ -16,10 +16,10 @@ def run_model(model, itw, itt, batch):
     while len(batch) < BATCH_SIZE:
         batch.append([-1, "", [], [], ""])
     batch.sort(key = lambda x: -len(x[3]))
-    xc, xw = batchify(*zip(*[(x[2], x[3]) for x in batch]))
+    xc, xw = batchify(*zip(*[(x[2], x[3]) for x in batch]), sos = True, eos = True)
     result = model(xc, xw, maskset(xw))
     if VERBOSE:
-        Va = model.attn.Va.squeeze(2).tolist() # attention weights
+        Va = model.attn.Va.tolist() # attention weights
     for i in range(batch_size):
         y = itt[result[i].argmax()]
         p = round(max(result[i]).exp().item(), NUM_DIGITS)
@@ -30,7 +30,7 @@ def run_model(model, itw, itt, batch):
             y = enumerate(result[i].exp().tolist())
             for a, b in sorted(y, key = lambda x: -x[1]):
                 print(itt[a], round(b, NUM_DIGITS))
-            print(mat2csv(heatmap(Va[i], batch[i][3], itw))) # attention heatmap
+            print(heatmap(Va[i], batch[i][3], itw, sos = True, eos = True)) # attention heatmap
     return [(x[1], *x[4:]) for x in sorted(batch[:batch_size])]
 
 def predict(filename, model, cti, wti, itt, itw):
