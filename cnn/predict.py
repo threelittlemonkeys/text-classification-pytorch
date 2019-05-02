@@ -15,7 +15,7 @@ def run_model(model, itt, batch):
     while len(batch) < BATCH_SIZE:
         batch.append([-1, "", [], [], ""])
     batch.sort(key = lambda x: -len(x[2]))
-    xc, xw = batchify(*zip(*[(x[2], x[3]) for x in batch]), max(KERNEL_SIZES))
+    xc, xw = batchify(*zip(*[(x[2], x[3]) for x in batch]), max(KERNEL_SIZES), True, True)
     result = model(xc, xw)
     for i in range(batch_size):
         y = itt[result[i].argmax()]

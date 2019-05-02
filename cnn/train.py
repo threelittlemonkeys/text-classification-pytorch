@@ -20,7 +20,7 @@ def load_data():
         bxw.append(xw)
         by.append(int(y[0]))
         if len(by) == BATCH_SIZE:
-            bxc, bxw = batchify(bxc, bxw, max(KERNEL_SIZES))
+            bxc, bxw = batchify(bxc, bxw, max(KERNEL_SIZES), True, True)
             data.append((bxc, bxw, LongTensor(by)))
             bxc = []
             bxw = []
