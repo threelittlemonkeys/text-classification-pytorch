@@ -106,6 +106,7 @@ def batchify(xc, xw, sos = False, eos = False, minlen = 0):
 
 def heatmap(m, x, itw, ch = True, rh = False, sos = False, eos = False): # attention heatmap
     f = "%%.%df" % NUM_DIGITS
+    m = [v[:len(x) + sos + eos] for v in m] # remove padding
     m = [([SOS] if sos else []) + [itw[i] for i in x] + ([EOS] if eos else [])] + m
     if ch: # column header
         csv = DELIM.join([x for x in m[0]]) + "\n" # source sequence

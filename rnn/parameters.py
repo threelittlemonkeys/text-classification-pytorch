@@ -13,7 +13,7 @@ NUM_HEADS = 8
 DK = HIDDEN_SIZE // NUM_HEADS # dimension of key
 DV = HIDDEN_SIZE // NUM_HEADS # dimension of value
 LEARNING_RATE = 1e-4
-VERBOSE = False
+VERBOSE = True
 EVAL_EVERY = 10
 SAVE_EVERY = 10
 
