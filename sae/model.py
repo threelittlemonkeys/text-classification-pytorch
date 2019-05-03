@@ -37,7 +37,7 @@ class sae(nn.Module): # self attentive encoder
         self.softmax = nn.LogSoftmax(1)
 
         if CUDA:
-            lself = self.cuda()
+            self = self.cuda()
 
     def forward(self, x):
         mask = maskset(x)

@@ -1,10 +1,10 @@
 import torch
 
-UNIT = "word" # unit of tokenization (char, word)
+UNIT = "char" # unit of tokenization (char, word)
 RNN_TYPE = "LSTM"
 NUM_DIRS = 2 # unidirectional: 1, bidirectional: 2
 BATCH_SIZE = 128
-EMBED = ["char-cnn", "lookup"] # embeddings (char-cnn, lookup)
+EMBED = ["lookup"] # embeddings (char-cnn, lookup)
 EMBED_SIZE = 300
 HIDDEN_SIZE = 500
 ATTN = "attn" # attention (attn: global, attn-rc: with residual connection, mh-attn: multi-head)
@@ -13,7 +13,7 @@ NUM_HEADS = 8
 DK = HIDDEN_SIZE // NUM_HEADS # dimension of key
 DV = HIDDEN_SIZE // NUM_HEADS # dimension of value
 LEARNING_RATE = 1e-4
-VERBOSE = True
+VERBOSE = False
 EVAL_EVERY = 10
 SAVE_EVERY = 10
 
