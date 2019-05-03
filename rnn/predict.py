@@ -16,7 +16,7 @@ def run_model(model, itw, itt, batch):
     while len(batch) < BATCH_SIZE:
         batch.append([-1, "", [], [], ""])
     batch.sort(key = lambda x: -len(x[3]))
-    xc, xw = batchify(*zip(*[(x[2], x[3]) for x in batch]), sos = True, eos = True)
+    xc, xw = batchify(*zip(*[(x[2], x[3]) for x in batch]), True, True)
     result = model(xc, xw, maskset(xw))
     if VERBOSE:
         Va = model.attn.Va.tolist() # attention weights

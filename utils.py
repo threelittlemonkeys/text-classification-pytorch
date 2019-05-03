@@ -91,7 +91,7 @@ def maskset(x):
 def idx_to_tkn(tkn_to_idx):
     return [x for x, _ in sorted(tkn_to_idx.items(), key = lambda x: x[1])]
 
-def batchify(xc, xw, minlen = 0, sos = False, eos = False):
+def batchify(xc, xw, sos = False, eos = False, minlen = 0):
     xw_len = max(minlen, max(len(x) for x in xw))
     if xc:
         xc_len = max(minlen, max(len(w) for x in xc for w in x))
