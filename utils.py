@@ -104,15 +104,15 @@ def batchify(xc, xw, minlen = 0, sos = False, eos = False):
     xw = [sos + list(x) + eos + [PAD_IDX] * (xw_len - len(x)) for x in xw]
     return xc, LongTensor(xw)
 
-def heatmap(m, x, itw, sos = False, eos = False, ch = True, rh = False, nd = NUM_DIGITS, delim ="\t"): # attention heatmap
-    f = "%%.%df" % nd
+def heatmap(m, x, itw, ch = True, rh = False, sos = False, eos = False): # attention heatmap
+    f = "%%.%df" % NUM_DIGITS
     m = [([SOS] if sos else []) + [itw[i] for i in x] + ([EOS] if eos else [])] + m
     if ch: # column header
-        csv = delim.join([x for x in m[0]]) + "\n" # source sequence
+        csv = DELIM.join([x for x in m[0]]) + "\n" # source sequence
     for row in m[ch:]:
         if rh: # row header
-            csv += row[0] + delim # target sequence
-        csv += delim.join([f % x for x in row[rh:]]) + "\n"
+            csv += row[0] + DELIM # target sequence
+        csv += DELIM.join([f % x for x in row[rh:]]) + "\n"
     return csv
 
 def f1(p, r):

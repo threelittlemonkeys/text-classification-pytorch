@@ -7,7 +7,7 @@ BATCH_SIZE = 128
 EMBED = ["char-cnn", "lookup"] # embeddings (char-cnn, lookup)
 EMBED_SIZE = 300
 HIDDEN_SIZE = 500
-ATTN = "attn" # attention (attn: global attention, attn-rc: with residual connection, mh-attn: multi-head attention)
+ATTN = "attn" # attention (attn: global, attn-rc: with residual connection, mh-attn: multi-head)
 DROPOUT = 0.5
 NUM_HEADS = 8
 DK = HIDDEN_SIZE // NUM_HEADS # dimension of key
@@ -30,5 +30,6 @@ UNK_IDX = 3
 torch.manual_seed(1)
 CUDA = torch.cuda.is_available()
 
+DELIM = "\t" # delimiter
 KEEP_IDX = False # use the existing indices when preparing additional data
 NUM_DIGITS = 4 # number of digits to print

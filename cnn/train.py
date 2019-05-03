@@ -47,8 +47,7 @@ def train():
             loss = F.nll_loss(model(xc, xw), y) # forward pass and compute loss
             loss.backward() # compute gradients
             optim.step() # update parameters
-            loss = loss.tolist()
-            loss_sum += loss
+            loss_sum += loss.item()
         timer = time.time() - timer
         loss_sum /= len(data)
         if ei % SAVE_EVERY and ei != epoch + num_epochs:
