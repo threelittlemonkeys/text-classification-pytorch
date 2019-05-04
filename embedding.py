@@ -60,14 +60,18 @@ class embed_rnn(nn.Module): # TODO
 class embed_sae(nn.Module): # self attentive encoder
     def __init__(self, vocab_size, embed_size):
         dim = 512
-        pe_maxlen = 1000
 
         # architecture
         self.embed = nn.Embedding(vocab_size, dim, padding_idx = PAD_IDX)
-        self.pe = pos_encoder(pe_maxlen)
+        self.pe = pos_encoder(dim) # positional encodings
 
-    def pos_encoder(maxlen, dim): # positional encoder
+    def pos_encoder(dim, maxlen = 1000): # positional encoder
         pe = Tensor(maxlen, dim)
+        pos = torch.arange(0, maxlen, 1.).unsqueeze(1)
+        k = torch.exp(-np.log(10000) * torch.arange(0, dim, 2.) / dim)
+        pe[:, 0::2] = torch.sin(pos * k)
+        pe[:, 1::2] = torch.cos(pos * k)
+        return pe
 
     def forward(self, x):
         pass
