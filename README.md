@@ -2,7 +2,6 @@
 
 Minimal implementations of text classification models in PyTorch.
 
-- Rule-based classification
 - Convolutional Neural Networks (CNNs)
 - Character-level Convolutional Neural Networks (CNNs)
 - Recurrent Neural Networks with attention (RNNs)

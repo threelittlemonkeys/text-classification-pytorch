@@ -1,6 +1,6 @@
 # The Self-Attentive Encoder in PyTorch
 
-A PyTorch implementation of the Self-Attentive Encoder for text classification.
+A PyTorch implementation of self-attentive encoder (SAE) for text classification.
 
 Supported features:
 - Mini-batch training with CUDA
