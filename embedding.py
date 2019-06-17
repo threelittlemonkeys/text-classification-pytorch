@@ -49,29 +49,3 @@ class embed_cnn(nn.Module):
         h = self.fc(h) # [B * L, embed_size]
         h = h.view(BATCH_SIZE, -1, h.size(1)) # [B, L, embed_size]
         return h
-
-class embed_rnn(nn.Module): # TODO
-    def __init__(self, vocab_size, embed_size):
-        pass
-
-    def forward(self, x):
-        pass
-
-class embed_sae(nn.Module): # self attentive encoder
-    def __init__(self, vocab_size, embed_size):
-        dim = 512
-
-        # architecture
-        self.embed = nn.Embedding(vocab_size, dim, padding_idx = PAD_IDX)
-        self.pe = pos_encoder(dim) # positional encodings
-
-    def pos_encoder(dim, maxlen = 1000): # positional encoder
-        pe = Tensor(maxlen, dim)
-        pos = torch.arange(0, maxlen, 1.).unsqueeze(1)
-        k = torch.exp(-np.log(10000) * torch.arange(0, dim, 2.) / dim)
-        pe[:, 0::2] = torch.sin(pos * k)
-        pe[:, 1::2] = torch.cos(pos * k)
-        return pe
-
-    def forward(self, x):
-        pass
