@@ -1,5 +1,6 @@
 from utils import *
 from embedding import embed
+from sae import sae
 
 CUDA = torch.cuda.is_available()
 torch.manual_seed(0) # for reproducibility
@@ -11,21 +12,21 @@ class cnn(nn.Module):
         # architecture
         self.embed = embed(char_vocab_size, word_vocab_size, EMBED_SIZE)
         self.conv = nn.ModuleList([nn.Conv2d(
-            in_channels = 1,
-            out_channels = NUM_FEATURE_MAPS,
-            kernel_size = (i, EMBED_SIZE)
-        ) for i in KERNEL_SIZES])
+            in_channels = 1, # Ci
+            out_channels = NUM_FEATMAPS, # Co
+            kernel_size = (i, EMBED_SIZE) # height, width
+        ) for i in KERNEL_SIZES]) # num_kernels (K)
         self.dropout = nn.Dropout(DROPOUT)
-        self.fc = nn.Linear(len(KERNEL_SIZES) * NUM_FEATURE_MAPS, num_labels)
+        self.fc = nn.Linear(len(KERNEL_SIZES) * NUM_FEATMAPS, num_labels)
         self.softmax = nn.LogSoftmax(1)
 
         if CUDA:
             self = self.cuda()
 
     def forward(self, xc, xw):
-        x = self.embed(xc, xw) # [B, L, H]
-        x = x.unsqueeze(1) # [B, in_channels (Ci), L, H]
-        h = [conv(x) for conv in self.conv] # [B, out_channels (Co), L, 1] * num_kernels (K)
+        x = self.embed(xc, xw) # [batch_size (B), seq_len (L), embed_size (H)]
+        x = x.unsqueeze(1) # [B, Ci, L, H]
+        h = [conv(x) for conv in self.conv] # [B, Co, L, 1] * K
         h = [F.relu(k).squeeze(3) for k in h] # [B, Co, L] * K
         h = [F.max_pool1d(k, k.size(2)).squeeze(2) for k in h] # [B, Co] * K
         h = torch.cat(h, 1) # [B, Co * K]
