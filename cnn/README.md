@@ -3,7 +3,7 @@
 A minimal PyTorch implementation of Convolutional Neural Networks (CNNs) for text classification.
 
 Supported features:
-- Lookup, character embedding and/or self-attentive encoding in the input layer
+- Lookup, CNNs, RNNs and/or self-attentive encoding in the embedding layer
 - Mini-batch training with CUDA
 
 ## Usage
