@@ -10,12 +10,14 @@ class rnn(nn.Module):
         self.rnn1 = getattr(nn, RNN_TYPE)(
             input_size = EMBED_SIZE,
             hidden_size = HIDDEN_SIZE // NUM_DIRS,
+            num_layers = 1,
             batch_first = True,
             bidirectional = NUM_DIRS == 2
         )
         self.rnn2 = getattr(nn, RNN_TYPE)(
             input_size = HIDDEN_SIZE,
             hidden_size = HIDDEN_SIZE // NUM_DIRS,
+            num_layers = 1,
             batch_first = True,
             bidirectional = NUM_DIRS == 2
         )
@@ -32,21 +34,21 @@ class rnn(nn.Module):
         if CUDA:
             self = self.cuda()
 
-    def init_hidden(self): # initialize hidden states
-        h = zeros(NUM_DIRS, BATCH_SIZE, HIDDEN_SIZE // NUM_DIRS) # hidden state
+    def init_state(self): # initialize the cell state
+        hs = zeros(NUM_LAYERS * NUM_DIRS, BATCH_SIZE, HIDDEN_SIZE // NUM_DIRS) # hidden state
         if RNN_TYPE == "LSTM":
-            c = zeros(NUM_DIRS, BATCH_SIZE, HIDDEN_SIZE // NUM_DIRS) # cell state
-            return (h, c)
-        return h
+            cs = zeros(NUM_LAYERS * NUM_DIRS, BATCH_SIZE, HIDDEN_SIZE // NUM_DIRS) # cell state
+            return (hs, cs)
+        return hs
 
     def forward(self, xc, xw, mask):
-        self.hidden1 = self.init_hidden()
-        self.hidden2 = self.init_hidden()
+        s1 = self.init_hidden()
+        s2 = self.init_hidden()
         x = self.embed(xc, xw)
         x = nn.utils.rnn.pack_padded_sequence(x, mask[1], batch_first = True)
-        h1, self.hidden1 = self.rnn1(x, self.hidden1)
-        h2, self.hidden2 = self.rnn2(h1, self.hidden2)
-        h = self.hidden2 if RNN_TYPE == "GRU" else self.hidden2[-1]
+        h1, s1 = self.rnn1(x, s1)
+        h2, s2 = self.rnn2(h1, s2)
+        h = s2 if RNN_TYPE == "GRU" else s2[-1]
         h = torch.cat([x for x in h[-NUM_DIRS:]], 1) # final cell state
         if self.attn:
             h1, _ = nn.utils.rnn.pad_packed_sequence(h1, batch_first = True)
