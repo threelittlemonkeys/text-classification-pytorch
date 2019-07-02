@@ -10,12 +10,14 @@ class rnn(nn.Module):
         self.rnn1 = getattr(nn, RNN_TYPE)(
             input_size = EMBED_SIZE,
             hidden_size = HIDDEN_SIZE // NUM_DIRS,
+            num_layers = 1,
             batch_first = True,
             bidirectional = NUM_DIRS == 2
         )
         self.rnn2 = getattr(nn, RNN_TYPE)(
             input_size = HIDDEN_SIZE,
             hidden_size = HIDDEN_SIZE // NUM_DIRS,
+            num_layers = 1,
             batch_first = True,
             bidirectional = NUM_DIRS == 2
         )
@@ -33,11 +35,11 @@ class rnn(nn.Module):
             self = self.cuda()
 
     def init_state(self): # initialize the cell state
-        h = zeros(NUM_DIRS, BATCH_SIZE, HIDDEN_SIZE // NUM_DIRS) # hidden state
+        hs = zeros(NUM_DIRS, BATCH_SIZE, HIDDEN_SIZE // NUM_DIRS) # hidden state
         if RNN_TYPE == "LSTM":
-            c = zeros(NUM_DIRS, BATCH_SIZE, HIDDEN_SIZE // NUM_DIRS) # cell state
-            return (h, c)
-        return h
+            cs = zeros(NUM_DIRS, BATCH_SIZE, HIDDEN_SIZE // NUM_DIRS) # cell state
+            return (hs, cs)
+        return hs
 
     def forward(self, xc, xw, mask):
         s1 = self.init_state()

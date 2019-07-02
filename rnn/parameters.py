@@ -1,7 +1,7 @@
 import torch
 
 UNIT = "char" # unit of tokenization (char, word)
-RNN_TYPE = "LSTM"
+RNN_TYPE = "LSTM" # LSTM, GRU
 NUM_DIRS = 2 # unidirectional: 1, bidirectional: 2
 BATCH_SIZE = 128
 EMBED = ["lookup"] # embeddings (char-cnn, lookup, sae)

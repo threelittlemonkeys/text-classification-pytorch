@@ -32,6 +32,8 @@ Zichao Yang, Diyi Yang, Chris Dyer, Xiaodong He, Alex Smola, Eduard Hovy. 2016. 
 
 Wenpeng Yin, Katharina Kann, Mo Yu, Hinrich Schütze. 2017. [Comparative Study of CNN and RNN for Natural Language Processing.](https://arxiv.org/abs/1702.01923) arXiv:1702.01923.
 
+Zenan Zhai, Dat Quoc Nguyen, Karin Verspoor. 2018. [Comparing CNN and LSTM character-level embeddings in BiLSTM-CRF models for chemical and disease named entity recognition.](https://www.aclweb.org/anthology/W18-5605) In Proceedings of the 9th International Workshop on Health Text Mining and Information Analysis (LOUHI).
+
 Ye Zhang, Byron Wallace. 2016. [A Sensitivity Analysis of (and Practitioners' Guide to) Convolutional Neural Networks for Sentence Classification.](https://arxiv.org/abs/1510.03820) arXiv:1510.03820.
 
 Xiang Zhang, Junbo Zhao, Yann LeCun. 2015. [Character-level Convolutional Networks for Text Classification.](https://arxiv.org/abs/1509.01626) arXiv:1509.01626.
