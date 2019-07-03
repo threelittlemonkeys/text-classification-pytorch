@@ -1,6 +1,5 @@
 from utils import *
 from embedding import embed
-from sae import sae
 
 CUDA = torch.cuda.is_available()
 torch.manual_seed(0) # for reproducibility
@@ -10,7 +9,7 @@ class cnn(nn.Module):
         super().__init__()
 
         # architecture
-        self.embed = embed(char_vocab_size, word_vocab_size, EMBED_SIZE)
+        self.embed = embed(char_vocab_size, word_vocab_size)
         self.conv = nn.ModuleList([nn.Conv2d(
             in_channels = 1, # Ci
             out_channels = NUM_FEATMAPS, # Co

@@ -1,24 +1,27 @@
 from utils import *
 import numpy as np
+import torch.nn.functional as F
 
 class embed(nn.Module):
-    def __init__(self, char_vocab_size, word_vocab_size, embed_size):
+    def __init__(self, char_vocab_size, word_vocab_size):
         super().__init__()
-        dim = embed_size // len(EMBED) # dimension of each embedding vector
 
         # architecture
-        if "char-cnn" in EMBED:
-            self.char_embed = self.cnn(char_vocab_size, dim)
-        if "lookup" in EMBED:
-            self.word_embed = nn.Embedding(word_vocab_size, dim, padding_idx = PAD_IDX)
-        if "sae" in EMBED:
-            self.word_embed = self.sae(word_vocab_size, dim)
+        for model, dim in EMBED.items():
+            if model == "char-cnn":
+                self.char_embed = self.cnn(char_vocab_size, dim)
+            elif model == "char-rnn":
+                self.char_embed = self.rnn(char_vocab_size, dim)
+            if model == "lookup":
+                self.word_embed = nn.Embedding(word_vocab_size, dim, padding_idx = PAD_IDX)
+            elif model == "sae":
+                self.word_embed = self.sae(word_vocab_size, dim)
 
         if CUDA:
             self = self.cuda()
 
     def forward(self, xc, xw):
-        hc = self.char_embed(xc) if "char-cnn" in EMBED else None
+        hc = self.char_embed(xc) if "char-cnn" in EMBED or "char-rnn" in EMBED else None
         hw = self.word_embed(xw) if "lookup" in EMBED or "sae" in EMBED else None
         h = torch.cat([h for h in [hc, hw] if type(h) == torch.Tensor], 2)
         return h
@@ -41,16 +44,55 @@ class embed(nn.Module):
             self.fc = nn.Linear(len(kernel_sizes) * num_featmaps, embed_size)
 
         def forward(self, x):
-            x = x.view(-1, x.size(2)) # [batch_size (B) * word_seq_len (L), char_seq_len (H)]
-            x = self.embed(x) # [B * L, H, dim (W)]
-            x = x.unsqueeze(1) # [B * L, Ci, H, W]
-            h = [conv(x) for conv in self.conv] # [B * L, Co, H, 1] * K
-            h = [F.relu(k).squeeze(3) for k in h] # [B * L, Co, H] * K
-            h = [F.max_pool1d(k, k.size(2)).squeeze(2) for k in h] # [B * L, Co] * K
-            h = torch.cat(h, 1) # [B * L, Co * K]
+            x = x.view(-1, x.size(2)) # [batch_size (B) * word_seq_len (Lw), char_seq_len (Lc)]
+            x = self.embed(x) # [B * Lw, Lc, dim (H)]
+            x = x.unsqueeze(1) # [B * Lw, Ci, Lc, W]
+            h = [conv(x) for conv in self.conv] # [B * Lw, Co, Lc, 1] * K
+            h = [F.relu(k).squeeze(3) for k in h] # [B * Lw, Co, Lc] * K
+            h = [F.max_pool1d(k, k.size(2)).squeeze(2) for k in h] # [B * Lw, Co] * K
+            h = torch.cat(h, 1) # [B * Lw, Co * K]
             h = self.dropout(h)
-            h = self.fc(h) # [B * L, embed_size] # fully connected layer
-            h = h.view(BATCH_SIZE, -1, h.size(1)) # [B, L, embed_size]
+            h = self.fc(h) # fully connected layer [B * Lw, embed_size]
+            h = h.view(BATCH_SIZE, -1, h.size(1)) # [B, Lw, embed_size]
+            return h
+
+    class rnn(nn.Module):
+        def __init__(self, vocab_size, embed_size):
+            super().__init__()
+            self.dim = embed_size
+            self.rnn_type = "GRU" # LSTM, GRU
+            self.num_dirs = 2 # unidirectional: 1, bidirectional: 2
+            self.num_layers = 2
+
+            # architecture
+            self.embed = nn.Embedding(vocab_size, embed_size, padding_idx = PAD_IDX)
+            self.rnn = getattr(nn, self.rnn_type)(
+                input_size = self.dim,
+                hidden_size = self.dim // self.num_dirs,
+                num_layers = self.num_layers,
+                bias = True,
+                batch_first = True,
+                dropout = DROPOUT,
+                bidirectional = self.num_dirs == 2
+            )
+
+        def init_state(self, b): # initialize the cell state
+            n = self.num_layers * self.num_dirs
+            h = self.dim // self.num_dirs
+            hs = zeros(n, b, h) # hidden state
+            if self.rnn_type == "LSTM":
+                cs = zeros(n, b, h) # cell state
+                return (hs, cs)
+            return hs
+
+        def forward(self, x):
+            s = self.init_state(x.size(0) * x.size(1))
+            x = x.view(-1, x.size(2)) # [batch_size (B) * word_seq_len (Lw), char_seq_len (Lc)]
+            x = self.embed(x) # [B * Lw, Lc, embed_size (H)]
+            h, s = self.rnn(x, s)
+            h = s if self.rnn_type == "GRU" else s[-1]
+            h = torch.cat([x for x in h[-self.num_dirs:]], 1) # final cell state [B * Lw, H]
+            h = h.view(BATCH_SIZE, -1, h.size(1)) # [B, Lw, H]
             return h
 
     class sae(nn.Module): # self attentive encoder
