@@ -13,7 +13,7 @@ class cnn(nn.Module):
         self.conv = nn.ModuleList([nn.Conv2d(
             in_channels = 1, # Ci
             out_channels = NUM_FEATMAPS, # Co
-            kernel_size = (i, EMBED_SIZE) # height, width
+            kernel_size = (i, sum(EMBED.values())) # height, width
         ) for i in KERNEL_SIZES]) # num_kernels (K)
         self.dropout = nn.Dropout(DROPOUT)
         self.fc = nn.Linear(len(KERNEL_SIZES) * NUM_FEATMAPS, num_labels)

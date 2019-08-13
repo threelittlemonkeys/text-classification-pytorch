@@ -8,7 +8,7 @@ class rnn(nn.Module):
         # architecture
         self.embed = embed(char_vocab_size, word_vocab_size)
         self.rnn1 = getattr(nn, RNN_TYPE)(
-            input_size = EMBED_SIZE,
+            input_size = sum(EMBED.values()),
             hidden_size = HIDDEN_SIZE // NUM_DIRS,
             num_layers = 1,
             batch_first = True,
@@ -25,7 +25,7 @@ class rnn(nn.Module):
         if ATTN == "attn": # global attention
             self.attn = attn(HIDDEN_SIZE)
         if ATTN == "attn-rc": # global attention with residual connection
-            self.attn = attn(EMBED_SIZE + HIDDEN_SIZE * 2)
+            self.attn = attn(sum(EMBED.values()) + HIDDEN_SIZE * 2)
         if ATTN == "mh-attn": # multi-head attention
             self.attn = attn_mh()
         self.fc = nn.Linear(HIDDEN_SIZE, num_labels)
