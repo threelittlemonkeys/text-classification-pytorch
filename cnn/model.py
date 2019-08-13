@@ -1,9 +1,6 @@
 from utils import *
 from embedding import embed
 
-CUDA = torch.cuda.is_available()
-torch.manual_seed(0) # for reproducibility
-
 class cnn(nn.Module):
     def __init__(self, char_vocab_size, word_vocab_size, num_labels):
         super().__init__()
