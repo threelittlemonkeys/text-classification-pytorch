@@ -1,9 +1,6 @@
 import sys
 import re
-import time
-import torch
-import torch.nn as nn
-import torch.nn.functional as F
+from time import time
 from os.path import isfile
 from parameters import *
 from collections import defaultdict

@@ -43,7 +43,7 @@ def train():
     for ei in range(epoch + 1, epoch + num_epochs + 1):
         ii = 0
         loss_sum = 0
-        timer = time.time()
+        timer = time()
         for xc, xw, y in data:
             ii += 1
             model.zero_grad()
@@ -52,7 +52,7 @@ def train():
             loss.backward()
             optim.step()
             loss_sum += loss.item()
-        timer = time.time() - timer
+        timer = time() - timer
         loss_sum /= len(data)
         if ei % SAVE_EVERY and ei != epoch + num_epochs:
             save_checkpoint("", None, ei, loss_sum, timer)
