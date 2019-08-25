@@ -34,10 +34,11 @@ class rnn(nn.Module):
         if CUDA:
             self = self.cuda()
 
-    def init_state(self): # initialize the cell state
-        hs = zeros(NUM_DIRS, BATCH_SIZE, HIDDEN_SIZE // NUM_DIRS) # hidden state
+    def init_state(self): # initialize RNN states
+        args = (1 * NUM_DIRS, BATCH_SIZE, HIDDEN_SIZE // NUM_DIRS) # NUM_LAYERS = 1
+        hs = zeros(*args) # hidden state
         if RNN_TYPE == "LSTM":
-            cs = zeros(NUM_DIRS, BATCH_SIZE, HIDDEN_SIZE // NUM_DIRS) # cell state
+            cs = zeros(*args) # LSTM cell state
             return (hs, cs)
         return hs
 
