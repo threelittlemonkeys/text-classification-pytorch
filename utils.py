@@ -82,7 +82,7 @@ LongTensor = cudify(torch.LongTensor)
 zeros = cudify(torch.zeros)
 
 def maskset(x):
-    mask = x.data.eq(PAD_IDX)
+    mask = x.eq(PAD_IDX)
     return (mask, x.size(1) - mask.sum(1)) # set of mask and lengths
 
 def idx_to_tkn(tkn_to_idx):
