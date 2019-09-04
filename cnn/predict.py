@@ -53,6 +53,5 @@ if __name__ == "__main__":
         sys.exit("Usage: %s model char_to_idx word_to_idx tag_to_idx test_data" % sys.argv[0])
     print("cuda: %s" % CUDA)
     result = predict(sys.argv[5], *load_model())
-    print()
     for x, y0, y1, p in result:
         print((x, y0, y1, p) if y0 else (x, y1, p))
