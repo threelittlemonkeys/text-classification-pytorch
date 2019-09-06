@@ -22,7 +22,7 @@ def evaluate(result, summary = False):
             print()
     avg["macro_pr"] /= len(tpfn)
     avg["macro_rc"] /= len(tpfn)
-    avg["micro_f1"] = sum(tp.values()) / sum(tpfp.values())
+    avg["micro_f1"] = sum(tp.values()) / sum(tpfn.values())
     print("macro precision = %f" % avg["macro_pr"])
     print("macro recall = %f" % avg["macro_rc"])
     print("macro f1 = %f" % f1(avg["macro_pr"], avg["macro_rc"]))
