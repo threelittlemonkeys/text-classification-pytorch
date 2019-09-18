@@ -3,10 +3,10 @@ from utils import *
 from evaluate import *
 
 def load_data():
-    data = []
     bxc = [] # character sequence batch
     bxw = [] # word sequence batch
     by = [] # label batch
+    data = []
     cti = load_tkn_to_idx(sys.argv[2]) # char_to_idx
     wti = load_tkn_to_idx(sys.argv[3]) # word_to_idx
     itt = load_idx_to_tkn(sys.argv[4]) # idx_to_tkn
