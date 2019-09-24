@@ -6,6 +6,7 @@ import torch.nn.functional as F
 UNIT = "char" # unit of tokenization (char, word)
 RNN_TYPE = "LSTM" # LSTM, GRU
 NUM_DIRS = 2 # unidirectional: 1, bidirectional: 2
+NUM_LAYERS = 1
 BATCH_SIZE = 64
 EMBED = {"char-cnn": 50, "lookup": 250} # embeddings (char-cnn, char-rnn, lookup, sae)
 HIDDEN_SIZE = 500
