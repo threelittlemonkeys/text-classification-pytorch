@@ -63,5 +63,6 @@ def train():
 if __name__ == "__main__":
     if len(sys.argv) not in [7, 8]:
         sys.exit("Usage: %s model char_to_idx word_to_idx tag_to_idx training_data (validation_data) num_epoch" % sys.argv[0])
-    print("cuda: %s" % CUDA)
+    if len(sys.argv) == 7:
+        EVAL_EVERY = False
     train()
